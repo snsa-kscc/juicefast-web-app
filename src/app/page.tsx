@@ -1,22 +1,50 @@
 "use client";
 
 import Image from "next/image";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { ImageScanner } from "@/components/meal-tracker/image-scanner";
 import { ManualEntryForm } from "@/components/meal-tracker/manual-entry-form";
 import { MealLog } from "@/components/meal-tracker/meal-log";
 import { MacroData } from "@/app/actions/analyze-meal";
 import { Button } from "@/components/ui/button";
+import { isValidToken, SECRET_TOKEN } from "@/lib/auth";
 
-// Main component for the meal tracker app
+// Main component that uses search params - needs to be wrapped in Suspense
 function MealTrackerApp() {
   const [meals, setMeals] = useState<MacroData[]>([]);
   const [activeTab, setActiveTab] = useState<"scan" | "manual">("scan");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const searchParams = useSearchParams();
 
   // Handler for when a meal is added (from either scanner or manual entry)
   const handleMealAdded = (mealData: MacroData) => {
     setMeals((prev) => [mealData, ...prev]);
   };
+
+  // Check authentication on component mount and when search params change
+  useEffect(() => {
+    const authToken = searchParams.get("auth");
+    setIsAuthenticated(isValidToken(authToken));
+  }, [searchParams]);
+
+  // If not authenticated, show login instructions
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 max-w-5xl mx-auto flex flex-col items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-red-800 mb-4">Authentication Required</h1>
+          <p className="text-red-500 mb-6">You need to provide a valid authentication token to access this application.</p>
+          <p className="text-sm text-gray-600 mb-4">
+            Add <code>?auth=your-secret-token</code> to the URL to access the app.
+          </p>
+          <p className="text-xs text-gray-500">
+            For example: <code>https://your-app-url.com/?auth=your-secret-token</code>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 sm:p-6 max-w-5xl mx-auto">
