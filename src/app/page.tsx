@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ImageScanner } from "@/components/meal-tracker/image-scanner";
 import { ManualEntryForm } from "@/components/meal-tracker/manual-entry-form";
@@ -10,7 +10,8 @@ import { MacroData } from "@/app/actions/analyze-meal";
 import { Button } from "@/components/ui/button";
 import { isValidToken, SECRET_TOKEN } from "@/lib/auth";
 
-export default function Home() {
+// Main component that uses search params - needs to be wrapped in Suspense
+function MealTrackerApp() {
   const [meals, setMeals] = useState<MacroData[]>([]);
   const [activeTab, setActiveTab] = useState<"scan" | "manual">("scan");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -78,5 +79,26 @@ export default function Home() {
         <p>© {new Date().getFullYear()} Juicefast Meal Tracker App - project Taurus</p>
       </footer>
     </div>
+  );
+}
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen p-4 sm:p-6 max-w-5xl mx-auto flex flex-col items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-semibold mb-4">Loading...</h2>
+        <p className="text-gray-500">Please wait while we initialize the app</p>
+      </div>
+    </div>
+  );
+}
+
+// Export the main component wrapped in Suspense
+export default function Home() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <MealTrackerApp />
+    </Suspense>
   );
 }
