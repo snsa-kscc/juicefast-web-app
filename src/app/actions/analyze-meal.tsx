@@ -12,8 +12,6 @@ export interface MacroData {
 
 // Function to analyze an image and extract macros using API
 export async function analyzeMealImage(formData: FormData): Promise<MacroData> {
-  // Get the auth token from the form data
-  const authToken = formData.get("auth") as string;
   try {
     const file = formData.get("image") as File;
 
@@ -34,11 +32,8 @@ export async function analyzeMealImage(formData: FormData): Promise<MacroData> {
 
     const baseUrl = `${protocol}://${host}`;
 
-    // Include the auth token in the request URL
+    // Create the API URL
     const url = new URL(`${baseUrl}/api/analyze-meal`);
-    // Always include the token, using a default if not provided
-    const token = authToken || "taurus-meal-tracker-secret-token-2025";
-    url.searchParams.append("auth", token);
 
     const response = await fetch(url, {
       method: "POST",
