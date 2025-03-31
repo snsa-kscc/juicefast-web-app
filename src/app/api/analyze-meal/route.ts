@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { google } from "@ai-sdk/google";
+import { isValidToken } from "@/lib/auth";
 
 // Schema for meal macros data
 const MacroSchema = z.object({
@@ -18,6 +19,11 @@ export type MacroData = z.infer<typeof MacroSchema>;
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const authToken = request.nextUrl.searchParams.get("auth");
+    if (!isValidToken(authToken)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     // Parse the incoming request
     const formData = await request.formData();
     const imageFile = formData.get("image") as File;

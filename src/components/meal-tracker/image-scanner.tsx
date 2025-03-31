@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
 import { analyzeMealImage, MacroData } from "@/app/actions/analyze-meal";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -14,8 +15,14 @@ export function ImageScanner({ onScanComplete }: { onScanComplete?: (data: Macro
   const [scanResult, setScanResult] = useState<MacroData | null>(null);
   const [uiContent, setUiContent] = useState<React.ReactNode | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>("upload");
+  const searchParams = useSearchParams();
+  const authToken = searchParams.get("auth");
 
   async function handleSubmit(formData: FormData) {
+    // Add the auth token to the form data
+    if (authToken) {
+      formData.append("auth", authToken);
+    }
     try {
       setIsScanning(true);
       setScanResult(null);
@@ -69,6 +76,11 @@ export function ImageScanner({ onScanComplete }: { onScanComplete?: (data: Macro
       // Create a FormData object to submit the captured image
       const formData = new FormData();
       formData.append("image", e.target.files[0]);
+      
+      // Add the auth token to the form data
+      if (authToken) {
+        formData.append("auth", authToken);
+      }
       
       // Submit the form programmatically
       await handleSubmit(formData);
