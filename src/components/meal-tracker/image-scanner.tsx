@@ -20,9 +20,9 @@ export function ImageScanner({ onScanComplete }: { onScanComplete?: (data: Macro
 
   async function handleSubmit(formData: FormData) {
     // Add the auth token to the form data
-    if (authToken) {
-      formData.append("auth", authToken);
-    }
+    // Always include the token from the URL or use the default
+    const token = authToken || "taurus-meal-tracker-secret-token-2025";
+    formData.append("auth", token);
     try {
       setIsScanning(true);
       setScanResult(null);
@@ -78,9 +78,9 @@ export function ImageScanner({ onScanComplete }: { onScanComplete?: (data: Macro
       formData.append("image", e.target.files[0]);
       
       // Add the auth token to the form data
-      if (authToken) {
-        formData.append("auth", authToken);
-      }
+      // Always include the token from the URL
+      const token = authToken || "taurus-meal-tracker-secret-token-2025";
+      formData.append("auth", token);
       
       // Submit the form programmatically
       await handleSubmit(formData);

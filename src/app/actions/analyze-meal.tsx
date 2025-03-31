@@ -28,15 +28,17 @@ export async function analyzeMealImage(formData: FormData): Promise<MacroData> {
     // Call our API endpoint with an absolute URL
     // When running in a server action, we need to use an absolute URL
     // Get the base URL from headers or environment
-    const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+    // const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
     const host = process.env.VERCEL_URL || "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+
     const baseUrl = `${protocol}://${host}`;
 
     // Include the auth token in the request URL
     const url = new URL(`${baseUrl}/api/analyze-meal`);
-    if (authToken) {
-      url.searchParams.append("auth", authToken);
-    }
+    // Always include the token, using a default if not provided
+    const token = authToken || "taurus-meal-tracker-secret-token-2025";
+    url.searchParams.append("auth", token);
 
     const response = await fetch(url, {
       method: "POST",
