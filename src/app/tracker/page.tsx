@@ -6,7 +6,6 @@ import { ImageScanner } from "@/components/meal-tracker/image-scanner";
 import { ManualEntryForm } from "@/components/meal-tracker/manual-entry-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { isValidToken } from "@/lib/auth";
 import {
   MacroData,
   MealEntry,
@@ -60,12 +59,6 @@ function HealthTrackerApp() {
     sleep: 0,
     mindfulness: 0,
   });
-
-  // Check authentication on component mount and when search params change
-  useEffect(() => {
-    const authToken = searchParams.get("auth");
-    setIsAuthenticated(isValidToken(authToken));
-  }, [searchParams]);
 
   // Load user profile on mount
   useEffect(() => {
