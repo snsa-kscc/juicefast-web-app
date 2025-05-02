@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { getAvailableDateKeys, formatDateKey } from "@/lib/daily-tracking-store";
@@ -25,7 +21,7 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
   useEffect(() => {
     setIsClient(true);
     const dateKeys = getAvailableDateKeys();
-    setAvailableDates(dateKeys.map(key => new Date(key)));
+    setAvailableDates(dateKeys.map((key) => new Date(key)));
   }, []);
 
   // Handle navigation to previous day
@@ -39,7 +35,7 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
   const handleNextDay = () => {
     const nextDay = new Date(selectedDate);
     nextDay.setDate(nextDay.getDate() + 1);
-    
+
     // Don't allow selecting future dates
     if (nextDay <= new Date()) {
       onDateChange(nextDay);
@@ -54,18 +50,16 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
   // Determine if a date has data
   const hasDataForDate = (date: Date) => {
     const dateKey = formatDateKey(date);
-    return availableDates.some(d => formatDateKey(d) === dateKey);
+    return availableDates.some((d) => formatDateKey(d) === dateKey);
   };
 
   // Custom day renderer for the calendar to highlight days with data
   const renderDay = (day: Date) => {
     const hasData = hasDataForDate(day);
     return (
-      <div className={`relative ${hasData ? 'font-bold' : ''}`}>
+      <div className={`relative ${hasData ? "font-bold" : ""}`}>
         {day.getDate()}
-        {hasData && (
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
-        )}
+        {hasData && <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />}
       </div>
     );
   };
@@ -75,21 +69,13 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
 
   return (
     <div className="flex items-center space-x-2">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handlePreviousDay}
-        className="h-9 w-9"
-      >
+      <Button variant="outline" size="icon" onClick={handlePreviousDay} className="h-9 w-9">
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      
+
       <Popover>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="min-w-[240px] justify-start text-left font-normal"
-          >
+          <Button variant="outline" className="min-w-[240px] justify-start text-left font-normal">
             <CalendarIcon className="mr-2 h-4 w-4" />
             {format(selectedDate, "PPP")}
           </Button>
@@ -102,21 +88,17 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
             disabled={(date) => date > new Date()}
             initialFocus
             components={{
-              Day: ({ date }) => renderDay(date),
+              Day: ({ day }) => renderDay(day.date),
             }}
           />
           <div className="p-3 border-t">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleToday}
-            >
+            <Button variant="outline" className="w-full" onClick={handleToday}>
               Today
             </Button>
           </div>
         </PopoverContent>
       </Popover>
-      
+
       <Button
         variant="outline"
         size="icon"

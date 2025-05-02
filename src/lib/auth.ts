@@ -1,10 +1,20 @@
-export const SECRET_TOKEN = process.env.NEXT_PUBLIC_SECRET_TOKEN || "default-token-if-not-set";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/db";
 
-/**
- * Checks if the provided token matches the secret token
- */
-export function isValidToken(token: string | null): boolean {
-  // If SECRET_TOKEN is undefined (during SSR), don't authenticate
-  if (!SECRET_TOKEN) return false;
-  return token === SECRET_TOKEN;
-}
+export const auth = betterAuth({
+  emailAndPassword: {
+    enabled: true,
+    disableSignUp: false,
+    requireEmailVerification: true,
+    maxPasswordLength: 100,
+    minPasswordLength: 8,
+    sendResetPassword: async (data, request) => {
+      console.log("Reset password email sent to:", data.user.email);
+    },
+    resetPasswordTokenExpiresIn: 3600,
+  },
+  database: drizzleAdapter(db, {
+    provider: "pg",
+  }),
+});
