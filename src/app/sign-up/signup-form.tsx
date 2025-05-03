@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { signUpEmail } from "@/app/actions/auth";
@@ -55,7 +56,14 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
                 <Input name="confirmPassword" id="confirmPassword" type="password" required defaultValue={state.confirmPassword} />
               </div>
               <Button type="submit" className="w-full" disabled={pending}>
-                Sign Up
+                {pending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
               </Button>
               <Button
                 variant="outline"
