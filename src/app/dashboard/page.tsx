@@ -8,7 +8,7 @@ export default async function Dashboard() {
     headers: await headers(),
   });
   return (
-    <div>
+    <div className="font-sans">
       <HealthTrackerApp />
       <p>{!session ? "Not logged in" : session.user.email}</p>
       <SignOutButton />
