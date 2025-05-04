@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { ImageScanner } from "@/components/meal-tracker/image-scanner";
 import { ManualEntryForm } from "@/components/meal-tracker/manual-entry-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,9 +32,7 @@ import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics, loadUse
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Main component that uses search params - needs to be wrapped in Suspense
-function HealthTrackerApp() {
-  const searchParams = useSearchParams();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export function HealthTrackerApp() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "meals" | "activity" | "profile" | "trends">("dashboard");
   const [activeEntryTab, setActiveEntryTab] = useState<"scan" | "manual">("scan");
 
@@ -223,24 +220,6 @@ function HealthTrackerApp() {
     saveUserProfile(profile);
   };
 
-  // If not authenticated, show login instructions
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen p-4 sm:p-6 max-w-5xl mx-auto flex flex-col items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-red-800 mb-4">Authentication Required</h1>
-          <p className="text-red-500 mb-6">You need to provide a valid authentication token to access this application.</p>
-          <p className="text-sm text-gray-600 mb-4">
-            Add <code>?auth=your-secret-token</code> to the URL to access the app.
-          </p>
-          <p className="text-xs text-gray-500">
-            For example: <code>https://your-app-url.com/?auth=your-secret-token</code>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen p-4 sm:p-6 max-w-7xl mx-auto">
       <header className="mb-8">
@@ -382,26 +361,5 @@ function HealthTrackerApp() {
         <p>© {new Date().getFullYear()} Juicefast Health Tracker App - project Taurus</p>
       </footer>
     </div>
-  );
-}
-
-// Loading fallback component
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen p-4 sm:p-6 max-w-5xl mx-auto flex flex-col items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold mb-4">Loading...</h2>
-        <p className="text-gray-500">Please wait while we initialize the app</p>
-      </div>
-    </div>
-  );
-}
-
-// Export the main component wrapped in Suspense
-export default function Home() {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <HealthTrackerApp />
-    </Suspense>
   );
 }
