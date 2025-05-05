@@ -36,8 +36,8 @@ export function generateReferralCode(name?: string): string {
  * @returns A complete referral link that can be shared
  */
 export function createReferralLink(referralCode: string): string {
-  // In a real app, this would be your actual domain
-  const baseUrl = window.location.origin;
+  // Use the environment variable for the base URL
+  const baseUrl = process.env.NEXT_PUBLIC_BASEURL || window.location.origin;
   return `${baseUrl}/sign-up?ref=${referralCode}`;
 }
 
