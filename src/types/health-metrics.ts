@@ -48,6 +48,7 @@ export interface MindfulnessEntry {
 
 // User profile with height and other static measurements
 export interface UserProfile {
+  id?: string; // User identifier
   height: number; // in cm
   weight?: number; // in kg (optional)
   age?: number; // optional

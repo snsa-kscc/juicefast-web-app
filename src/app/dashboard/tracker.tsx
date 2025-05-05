@@ -28,12 +28,13 @@ import { MealTrackerExtended } from "@/components/health-tracker/meal-tracker-ex
 import { UserProfile } from "@/components/health-tracker/user-profile";
 import { DatePicker } from "@/components/health-tracker/date-picker";
 import { WeeklyTrends } from "@/components/health-tracker/weekly-trends";
+import { NutritionistChat } from "@/components/nutritionist/nutritionist-chat";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics, loadUserProfile, saveUserProfile } from "@/lib/daily-tracking-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Main component that uses search params - needs to be wrapped in Suspense
 export function HealthTrackerApp() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "meals" | "activity" | "profile" | "trends">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "meals" | "activity" | "profile" | "trends" | "nutritionist">("dashboard");
   const [activeEntryTab, setActiveEntryTab] = useState<"scan" | "manual">("scan");
 
   // Selected date for tracking
@@ -244,11 +245,12 @@ export function HealthTrackerApp() {
 
       <main>
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="mb-8">
-          <TabsList className="grid grid-cols-5 w-full max-w-2xl mx-auto">
+          <TabsList className="grid w-full grid-cols-6 mb-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="meals">Meals</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="nutritionist">Nutritionist</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -352,6 +354,17 @@ export function HealthTrackerApp() {
           <TabsContent value="profile" className="mt-6">
             <div className="max-w-md mx-auto">
               <UserProfile profile={userProfile} onUpdateProfile={handleUpdateProfile} />
+            </div>
+          </TabsContent>
+
+          {/* Nutritionist Chat Tab */}
+          <TabsContent value="nutritionist" className="mt-6">
+            <div className="max-w-4xl mx-auto">
+              <NutritionistChat 
+                userId={userProfile?.id || 'guest'}
+                userProfile={userProfile}
+                recentMeals={meals}
+              />
             </div>
           </TabsContent>
         </Tabs>
