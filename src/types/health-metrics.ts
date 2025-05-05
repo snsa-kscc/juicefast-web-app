@@ -54,6 +54,12 @@ export interface UserProfile {
   age?: number; // optional
   gender?: string; // optional
   activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+  
+  // Referral system fields
+  referralCode?: string; // Unique referral code for this user
+  referredBy?: string; // Referral code used by this user when signing up
+  referralCount?: number; // Number of successful referrals
+  referrals?: string[]; // Array of user IDs or emails who signed up using this referral code
 }
 
 // Health score calculation weights

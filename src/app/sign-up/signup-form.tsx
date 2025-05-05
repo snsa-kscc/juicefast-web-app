@@ -1,21 +1,37 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { signUpEmail } from "@/app/actions/auth";
 import { ActionState } from "@/lib/action-helpers";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { extractReferralCode } from "@/lib/referral-utils";
+
+// Component to handle the referral code from URL parameters
+function ReferralCodeHandler({ setReferralCode }: { setReferralCode: (code: string) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+    }
+  }, [searchParams, setReferralCode]);
+  
+  return null;
+}
 
 export function SignupForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
+  const [referralCode, setReferralCode] = useState<string>("");
   const [state, formAction, pending] = useActionState<ActionState, FormData>(signUpEmail, {
     error: "",
   });
@@ -54,6 +70,25 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
               <div className="grid gap-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input name="confirmPassword" id="confirmPassword" type="password" required defaultValue={state.confirmPassword} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="referralCode" className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  <span>Referral Code</span>
+                  <span className="text-xs text-gray-500 ml-1">(optional)</span>
+                </Label>
+                <Input 
+                  name="referralCode" 
+                  id="referralCode" 
+                  type="text" 
+                  placeholder="Enter referral code if you have one"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                />
+                {/* Wrap the component that uses useSearchParams in Suspense */}
+                <Suspense fallback={null}>
+                  <ReferralCodeHandler setReferralCode={setReferralCode} />
+                </Suspense>
               </div>
               <Button type="submit" className="w-full" disabled={pending}>
                 {pending ? (

@@ -127,6 +127,13 @@ export function getAvailableDateKeys(): string[] {
 // Save user profile to local storage
 export function saveUserProfile(profile: any): void {
   try {
+    // Initialize referral fields if they don't exist
+    if (profile.referralCode === undefined) {
+      // We'll generate the code in the UI component
+      profile.referralCount = 0;
+      profile.referrals = [];
+    }
+    
     localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
   } catch (error) {
     console.error("Failed to save user profile:", error);
