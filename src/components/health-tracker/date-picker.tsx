@@ -57,9 +57,9 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
   const renderDay = (day: Date) => {
     const hasData = hasDataForDate(day);
     return (
-      <div className={`relative ${hasData ? "font-bold" : ""}`}>
+      <div className={`relative flex h-8 w-8 items-center justify-center rounded-full ${hasData ? "font-bold" : ""}`}>
         {day.getDate()}
-        {hasData && <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />}
+        {hasData && <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full" />}
       </div>
     );
   };
@@ -87,9 +87,12 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
             onSelect={(date) => date && onDateChange(date)}
             disabled={(date) => date > new Date()}
             initialFocus
+            showOutsideDays={true}
+            fixedWeeks={true}
             components={{
-              Day: ({ day }) => renderDay(day.date),
+              Day: ({ date }) => renderDay(date),
             }}
+            className="rounded-md border shadow"
           />
           <div className="p-3 border-t">
             <Button variant="outline" className="w-full" onClick={handleToday}>

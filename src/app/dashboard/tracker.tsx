@@ -29,12 +29,13 @@ import { UserProfile } from "@/components/health-tracker/user-profile";
 import { DatePicker } from "@/components/health-tracker/date-picker";
 import { WeeklyTrends } from "@/components/health-tracker/weekly-trends";
 import { NutritionistChat } from "@/components/nutritionist/nutritionist-chat";
+import { AboutUs } from "@/components/about-us/about-us";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics, loadUserProfile, saveUserProfile } from "@/lib/daily-tracking-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Main component that uses search params - needs to be wrapped in Suspense
 export function HealthTrackerApp() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "meals" | "activity" | "profile" | "trends" | "nutritionist">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "meals" | "activity" | "profile" | "trends" | "nutritionist" | "about">("dashboard");
   const [activeEntryTab, setActiveEntryTab] = useState<"scan" | "manual">("scan");
 
   // Selected date for tracking
@@ -245,12 +246,13 @@ export function HealthTrackerApp() {
 
       <main>
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="mb-8">
-          <TabsList className="grid w-full grid-cols-6 mb-4">
+          <TabsList className="grid w-full grid-cols-7 mb-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="meals">Meals</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="nutritionist">Nutritionist</TabsTrigger>
+            <TabsTrigger value="about">About Us</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -360,11 +362,14 @@ export function HealthTrackerApp() {
           {/* Nutritionist Chat Tab */}
           <TabsContent value="nutritionist" className="mt-6">
             <div className="max-w-4xl mx-auto">
-              <NutritionistChat 
-                userId={userProfile?.id || 'guest'}
-                userProfile={userProfile}
-                recentMeals={meals}
-              />
+              <NutritionistChat userId={userProfile?.id || "guest"} userProfile={userProfile} recentMeals={meals} />
+            </div>
+          </TabsContent>
+
+          {/* About Us Tab */}
+          <TabsContent value="about" className="mt-6">
+            <div className="max-w-5xl mx-auto">
+              <AboutUs />
             </div>
           </TabsContent>
         </Tabs>
