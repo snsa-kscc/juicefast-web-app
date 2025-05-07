@@ -37,12 +37,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <PwaMeta />
+        {/* <PwaMeta /> */}
         {/* <ServiceWorkerRegistration /> */}
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased pb-16`}>
-        <main className="container mx-auto px-4 sm:px-6 max-w-7xl">{children}</main>
-        <MobileNavigation />
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {children}
         <Toaster />
       </body>
     </html>
