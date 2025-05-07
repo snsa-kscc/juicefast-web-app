@@ -1,5 +1,5 @@
-// Service Worker for Taurus Health Tracker PWA
-const CACHE_NAME = "taurus-cache-v1";
+// Service Worker for Juicefast Nutrition App PWA
+const CACHE_NAME = "juicefast-cache-v1";
 const urlsToCache = [
   // Main routes
   "/",

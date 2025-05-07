@@ -1,6 +1,6 @@
 {
-  "name": "Taurus Health Tracker",
-  "short_name": "Taurus",
+  "name": "Juicefast Nutrition App",
+  "short_name": "Juicefast",
   "description": "Track your meals, health metrics, and find stores near you",
   "start_url": "/",
   "display": "standalone",
