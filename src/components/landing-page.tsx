@@ -6,6 +6,9 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Apple, ArrowRight, CheckCircle2, Flame, Heart, LineChart, Salad, Utensils, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
+import logo from "../../public/jf-logo.png";
+import avatar from "../../public/user-avatar.png";
+import juice from "../../public/juice.png";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -33,7 +36,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="flex items-center gap-2">
               <Salad className="h-8 w-8 text-green-500" />
-              <Image src="/jf-logo.png" alt="Juicefast" width={100} height={100} className="object-cover" />
+              <Image src={logo} alt="Juicefast" width={100} height={100} className="object-cover" />
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
               <Button
@@ -76,7 +79,7 @@ export default function LandingPage() {
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-900 overflow-hidden">
-                      <Image src={`/user-avatar.png`} alt={`User ${i}`} width={40} height={40} className="object-cover" />
+                      <Image src={avatar} alt={`User ${i}`} width={40} height={40} className="object-cover" />
                     </div>
                   ))}
                 </div>
@@ -98,7 +101,7 @@ export default function LandingPage() {
 
                   {/* Glassmorphism card */}
                   <div className="relative bg-white/20 dark:bg-gray-900/40 backdrop-blur-xl rounded-3xl border border-white/30 dark:border-gray-800/30 shadow-xl overflow-hidden p-1">
-                    <Image src="/juice.png" alt="Juicefast Dashboard" width={700} height={500} className="rounded-2xl" />
+                    <Image src={juice} alt="Juicefast Dashboard" width={700} height={500} className="rounded-2xl" />
                   </div>
                 </div>
 
@@ -297,19 +300,19 @@ export default function LandingPage() {
               {
                 name: "Marin Juicefast",
                 role: "Fitness Enthusiast",
-                image: "/juice.png",
+                image: avatar,
                 quote: "Juicefast has completely transformed my approach to nutrition. The insights are invaluable!",
               },
               {
                 name: "Martina Juicefast",
                 role: "Marathon Runner",
-                image: "/juice.png",
+                image: avatar,
                 quote: "As an athlete, proper nutrition is crucial. This app makes it so easy to ensure I'm fueling properly.",
               },
               {
                 name: "Darko Juicefast",
                 role: "Wellness Coach",
-                image: "/juice.png",
+                image: avatar,
                 quote: "I recommend Juicefast to all my clients. The user interface is intuitive and the data is comprehensive.",
               },
             ].map((testimonial, index) => (
@@ -329,7 +332,7 @@ export default function LandingPage() {
                   <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg rounded-xl p-8 border border-white/30 dark:border-gray-800/30 shadow-lg h-full">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-16 h-16 rounded-full overflow-hidden">
-                        <Image src={testimonial.image || "/placeholder.svg"} alt={testimonial.name} width={80} height={80} className="object-cover" />
+                        <Image src={testimonial.image} alt={testimonial.name} width={80} height={80} className="object-cover" />
                       </div>
                       <div>
                         <h3 className="font-bold text-lg">{testimonial.name}</h3>
