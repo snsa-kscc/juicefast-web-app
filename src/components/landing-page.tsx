@@ -401,7 +401,10 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white">
+                <Button
+                  onClick={() => router.push("/sign-up")}
+                  className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
+                >
                   Start Your Journey
                 </Button>
               </div>
