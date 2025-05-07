@@ -9,15 +9,16 @@ import { Slider } from "@/components/ui/slider";
 import { SleepEntry } from "@/types/health-metrics";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
 import { ArrowLeft, BedIcon, MoonIcon, SunIcon } from "lucide-react";
+import { SLEEP_TRACKER_CONFIG } from "@/data/sleep-tracker";
 
 export default function SleepTrackerPage() {
   const router = useRouter();
   const [sleepEntry, setSleepEntry] = useState<SleepEntry | null>(null);
-  const [sleepHours, setSleepHours] = useState<number>(8);
+  const [sleepHours, setSleepHours] = useState<number>(SLEEP_TRACKER_CONFIG.dailyGoal);
   const [sleepQuality, setSleepQuality] = useState<number>(7);
-  const [bedTime, setBedTime] = useState<string>("22:30");
-  const [wakeTime, setWakeTime] = useState<string>("06:30");
-  const [dailyGoal] = useState<number>(8); // 8 hours daily goal
+  const [bedTime, setBedTime] = useState<string>(SLEEP_TRACKER_CONFIG.defaultBedtime);
+  const [wakeTime, setWakeTime] = useState<string>(SLEEP_TRACKER_CONFIG.defaultWakeTime);
+  const [dailyGoal] = useState<number>(SLEEP_TRACKER_CONFIG.dailyGoal); // Daily sleep goal
   
   // Load sleep entry on mount
   useEffect(() => {
@@ -250,7 +251,7 @@ export default function SleepTrackerPage() {
               <div className="bg-purple-100 text-purple-600 rounded-full p-1 mr-2 mt-0.5">
                 <BedIcon className="h-3 w-3" />
               </div>
-              <span>Aim for 7-9 hours of sleep consistently</span>
+              <span>Aim for {SLEEP_TRACKER_CONFIG.dailyGoal} hours of sleep consistently</span>
             </li>
             <li className="flex items-start">
               <div className="bg-purple-100 text-purple-600 rounded-full p-1 mr-2 mt-0.5">
@@ -264,6 +265,14 @@ export default function SleepTrackerPage() {
               </div>
               <span>Avoid screens 1 hour before bedtime</span>
             </li>
+            {SLEEP_TRACKER_CONFIG.sleepFactors.slice(0, 2).map(factor => (
+              <li key={factor.id} className="flex items-start">
+                <div className="bg-purple-100 text-purple-600 rounded-full p-1 mr-2 mt-0.5">
+                  <BedIcon className="h-3 w-3" />
+                </div>
+                <span>Monitor your {factor.label.toLowerCase()} intake before bed</span>
+              </li>
+            ))}
           </ul>
         </CardContent>
       </Card>

@@ -5,76 +5,9 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HeartIcon, BookOpenIcon, BrainIcon } from "lucide-react";
-
-// Sample wellness articles data
-const WELLNESS_ARTICLES = [
-  {
-    id: 1,
-    title: "The Benefits of Tracking Your Meals",
-    excerpt: "Learn how tracking your daily meals can lead to better nutrition and overall health.",
-    date: "May 5, 2025",
-    author: "Nutrition Team",
-    category: "Nutrition",
-    content:
-      "Tracking your meals is one of the most effective ways to improve your diet and overall health. By keeping a record of what you eat, you become more aware of your eating patterns and can make more informed decisions about your nutrition...",
-    imageUrl: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=2940&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    title: "5 Ways to Increase Your Daily Step Count",
-    excerpt: "Simple strategies to help you move more throughout the day and reach your step goals.",
-    date: "May 2, 2025",
-    author: "Fitness Team",
-    category: "Activity",
-    content:
-      "Increasing your daily step count doesn't have to involve drastic changes to your routine. Small adjustments throughout your day can add up to significant improvements in your overall activity level...",
-    imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2940&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Mindfulness and Nutrition: The Connection",
-    excerpt: "How practicing mindfulness can transform your relationship with food and improve eating habits.",
-    date: "April 28, 2025",
-    author: "Wellness Team",
-    category: "Mindfulness",
-    content:
-      "Mindfulness isn't just for meditation—it can also play a crucial role in your nutrition. By bringing awareness to your eating habits, you can develop a healthier relationship with food...",
-    imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=2731&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    title: "Understanding Sleep Cycles for Better Rest",
-    excerpt: "Learn how sleep cycles work and how to optimize your sleep for better health.",
-    date: "April 25, 2025",
-    author: "Sleep Expert",
-    category: "Sleep",
-    content:
-      "Quality sleep is essential for overall health and wellbeing. Understanding your sleep cycles can help you optimize your rest and wake up feeling more refreshed...",
-    imageUrl: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=2942&auto=format&fit=crop",
-  },
-  {
-    id: 5,
-    title: "Hydration: Why Water is Your Best Friend",
-    excerpt: "Discover the many benefits of staying properly hydrated throughout the day.",
-    date: "April 22, 2025",
-    author: "Nutrition Team",
-    category: "Hydration",
-    content:
-      "Water is essential for nearly every bodily function. Staying properly hydrated can improve energy levels, cognitive function, and overall health...",
-    imageUrl: "https://images.unsplash.com/photo-1523362628745-0c100150b504?q=80&w=2736&auto=format&fit=crop",
-  },
-  {
-    id: 6,
-    title: "Creating a Sustainable Wellness Routine",
-    excerpt: "Tips for building healthy habits that last a lifetime.",
-    date: "April 18, 2025",
-    author: "Wellness Team",
-    category: "Lifestyle",
-    content:
-      "The key to long-term health is creating sustainable wellness routines. Small, consistent actions over time lead to significant improvements in overall wellbeing...",
-    imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2920&auto=format&fit=crop",
-  }
-];
+import { WELLNESS_ARTICLES } from "@/data/wellness-articles";
+import { WELLNESS_PROGRAMS } from "@/data/wellness-programs";
+import { WELLNESS_TIPS } from "@/data/wellness-tips";
 
 export default function WellnessPage() {
   const router = useRouter();
@@ -95,29 +28,26 @@ export default function WellnessPage() {
       <div className="mb-8">
         <h2 className="text-lg font-medium mb-4">Featured Programs</h2>
         <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
-            <CardContent className="p-4">
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-blue-100 p-2 rounded-full mb-2">
-                  <BrainIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="font-medium text-blue-700">7-Day Mindfulness</h3>
-                <p className="text-xs text-blue-600 mt-1">Begin your journey</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
-            <CardContent className="p-4">
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-green-100 p-2 rounded-full mb-2">
-                  <HeartIcon className="h-6 w-6 text-green-600" />
-                </div>
-                <h3 className="font-medium text-green-700">Healthy Habits</h3>
-                <p className="text-xs text-green-600 mt-1">30-day challenge</p>
-              </div>
-            </CardContent>
-          </Card>
+          {WELLNESS_PROGRAMS.map(program => {
+            const IconComponent = program.icon === "Brain" ? BrainIcon : HeartIcon;
+            const colorClasses = program.color === "blue" ? 
+              { bg: "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100", icon: "bg-blue-100 text-blue-600", title: "text-blue-700", text: "text-blue-600" } :
+              { bg: "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100", icon: "bg-green-100 text-green-600", title: "text-green-700", text: "text-green-600" };
+            
+            return (
+              <Card key={program.id} className={colorClasses.bg}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center text-center">
+                    <div className={`${colorClasses.icon.split(' ')[0]} p-2 rounded-full mb-2`}>
+                      <IconComponent className={`h-6 w-6 ${colorClasses.icon.split(' ')[1]}`} />
+                    </div>
+                    <h3 className={`font-medium ${colorClasses.title}`}>{program.title}</h3>
+                    <p className={`text-xs ${colorClasses.text} mt-1`}>{program.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
@@ -173,7 +103,7 @@ export default function WellnessPage() {
         </CardHeader>
         <CardContent>
           <p className="text-amber-800">
-            "Take a few minutes each day to practice deep breathing. Inhale slowly for 4 counts, hold for 4, and exhale for 6. This simple practice can help reduce stress and improve focus."
+            "{WELLNESS_TIPS[Math.floor(Math.random() * WELLNESS_TIPS.length)].content}"
           </p>
         </CardContent>
       </Card>

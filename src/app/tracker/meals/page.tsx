@@ -9,6 +9,7 @@ import { MealTrackerExtended } from "@/components/health-tracker/meal-tracker-ex
 import { MacroData, MealEntry, MealType } from "@/types/health-metrics";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
 import { ArrowLeft } from "lucide-react";
+import { MEALS_TRACKER_CONFIG } from "@/data/meals-tracker";
 
 export default function MealsTrackerPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function MealsTrackerPage() {
     const dailyMetrics = loadDailyMetrics(todayKey);
     
     const newMeal: MealEntry = {
-      mealType: "breakfast", // Default type
+      mealType: MEALS_TRACKER_CONFIG.mealTypes[0].id as MealType, // Default to first meal type
       timestamp: new Date(),
       ...mealData,
     };

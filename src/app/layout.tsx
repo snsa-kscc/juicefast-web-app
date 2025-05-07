@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { MobileNavigation } from "@/components/navigation/mobile-navigation";
 import { PwaMeta } from "@/components/meta/pwa-meta";
+import { ServiceWorkerRegistration } from "@/components/meta/service-worker-registration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,29 +38,10 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <PwaMeta />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) {
-                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    },
-                    function(error) {
-                      console.log('ServiceWorker registration failed: ', error);
-                    }
-                  );
-                });
-              }
-            `,
-          }}
-        />
+        {/* <ServiceWorkerRegistration /> */}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased pb-16`}>
-        <main className="container mx-auto px-4 sm:px-6 max-w-7xl">
-          {children}
-        </main>
+        <main className="container mx-auto px-4 sm:px-6 max-w-7xl">{children}</main>
         <MobileNavigation />
         <Toaster />
       </body>

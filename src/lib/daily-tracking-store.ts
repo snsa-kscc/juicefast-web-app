@@ -6,6 +6,9 @@ const STORAGE_KEY_PREFIX = "health-tracker";
 const DAILY_METRICS_KEY = `${STORAGE_KEY_PREFIX}-daily-metrics`;
 const USER_PROFILE_KEY = `${STORAGE_KEY_PREFIX}-user-profile`;
 
+// Helper to check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
 // Format date as YYYY-MM-DD for storage keys
 export function formatDateKey(date: Date): string {
   return date.toISOString().split("T")[0];
@@ -36,6 +39,9 @@ export function getEmptyDailyMetrics(date: Date): DailyHealthMetrics {
 
 // Save daily metrics to local storage
 export function saveDailyMetrics(dateKey: string, metrics: DailyHealthMetrics): void {
+  // Skip if not in browser environment
+  if (!isBrowser) return;
+  
   try {
     // Calculate score before saving
     const score = calculateHealthScore(metrics);
@@ -57,6 +63,11 @@ export function saveDailyMetrics(dateKey: string, metrics: DailyHealthMetrics): 
 
 // Load daily metrics from local storage
 export function loadDailyMetrics(dateKey: string): DailyHealthMetrics {
+  // Return empty metrics if not in browser environment
+  if (!isBrowser) {
+    return getEmptyDailyMetrics(parseDateFromKey(dateKey));
+  }
+  
   try {
     const storedMetricsJSON = localStorage.getItem(DAILY_METRICS_KEY);
     const storedMetrics = storedMetricsJSON ? JSON.parse(storedMetricsJSON) : {};
@@ -110,6 +121,9 @@ export function loadDailyMetrics(dateKey: string): DailyHealthMetrics {
 
 // Get all available date keys (days with data)
 export function getAvailableDateKeys(): string[] {
+  // Return empty array if not in browser environment
+  if (!isBrowser) return [];
+  
   try {
     const storedMetricsJSON = localStorage.getItem(DAILY_METRICS_KEY);
     const storedMetrics = storedMetricsJSON ? JSON.parse(storedMetricsJSON) : {};
@@ -126,6 +140,9 @@ export function getAvailableDateKeys(): string[] {
 
 // Save user profile to local storage
 export function saveUserProfile(profile: any): void {
+  // Skip if not in browser environment
+  if (!isBrowser) return;
+  
   try {
     // Initialize referral fields if they don't exist
     if (profile.referralCode === undefined) {
@@ -142,6 +159,9 @@ export function saveUserProfile(profile: any): void {
 
 // Load user profile from local storage
 export function loadUserProfile(): any {
+  // Return null if not in browser environment
+  if (!isBrowser) return null;
+  
   try {
     const profileJSON = localStorage.getItem(USER_PROFILE_KEY);
     return profileJSON ? JSON.parse(profileJSON) : null;

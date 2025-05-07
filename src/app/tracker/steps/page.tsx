@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { StepEntry } from "@/types/health-metrics";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
 import { ArrowLeft, FootprintsIcon } from "lucide-react";
+import { STEPS_TRACKER_CONFIG } from "@/data/steps-tracker";
 
 export default function StepsTrackerPage() {
   const router = useRouter();
   const [stepCount, setStepCount] = useState<number>(0);
   const [stepEntries, setStepEntries] = useState<StepEntry[]>([]);
   const [totalSteps, setTotalSteps] = useState<number>(0);
-  const [dailyGoal] = useState<number>(10000); // 10,000 steps daily goal
+  const [dailyGoal] = useState<number>(STEPS_TRACKER_CONFIG.dailyGoal); // Daily step goal
   
   // Load step entries on mount
   useEffect(() => {
@@ -98,10 +99,9 @@ export default function StepsTrackerPage() {
               {/* Step milestone indicators */}
               <div className="flex justify-between mt-4 text-xs text-gray-500">
                 <div>0</div>
-                <div>2.5k</div>
-                <div>5k</div>
-                <div>7.5k</div>
-                <div>10k</div>
+                {STEPS_TRACKER_CONFIG.stepMilestones.map((milestone, index) => (
+                  <div key={index}>{(milestone.steps / 1000).toFixed(1)}k</div>
+                ))}
               </div>
               <div className="h-1 bg-gray-200 rounded-full mt-1 mb-2">
                 <div 
@@ -113,7 +113,7 @@ export default function StepsTrackerPage() {
               {/* Estimated calories */}
               <div className="mt-4 text-sm">
                 <span className="text-gray-500">Estimated calories: </span>
-                <span className="font-medium">{Math.round(totalSteps * 0.04)} kcal</span>
+                <span className="font-medium">{Math.round(totalSteps * STEPS_TRACKER_CONFIG.activityLevels[0].caloriesPerStep)} kcal</span>
               </div>
             </div>
           </div>
@@ -159,6 +159,21 @@ export default function StepsTrackerPage() {
                   {count.toLocaleString()} steps
                 </Button>
               ))}
+            </div>
+            
+            {/* Achievement indicators */}
+            <div className="mt-4">
+              <h3 className="text-sm font-medium mb-2">Today's Progress</h3>
+              <div className="space-y-2">
+                {STEPS_TRACKER_CONFIG.stepMilestones.map((milestone, index) => (
+                  <div key={index} className="flex items-center">
+                    <div 
+                      className={`w-3 h-3 rounded-full mr-2 ${totalSteps >= milestone.steps ? 'bg-green-500' : 'bg-gray-300'}`}
+                    ></div>
+                    <span className="text-sm">{milestone.achievement}: {milestone.steps.toLocaleString()} steps</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </CardContent>

@@ -1,65 +1,146 @@
 // Service Worker for Taurus Health Tracker PWA
-const CACHE_NAME = 'taurus-cache-v1';
+const CACHE_NAME = "taurus-cache-v1";
 const urlsToCache = [
-  '/',
-  '/dashboard',
-  '/meals',
-  '/stores',
-  '/blog',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/manifest.json'
+  // Main routes
+  "/",
+  "/dashboard",
+  "/tracker",
+  "/tracker/meals",
+  "/tracker/water",
+  "/tracker/sleep",
+  "/tracker/steps",
+  "/tracker/mindfulness",
+  "/stores",
+  "/chat",
+  "/wellness",
+  "/profile",
+
+  // Auth routes
+  "/sign-in",
+  "/sign-up",
+
+  // Assets
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png",
+  "/icons/icon-192x192.svg",
+  "/icons/icon-512x512.svg",
+  "/manifest.json",
+  "/file.svg",
+  "/globe.svg",
+  "/next.svg",
+  "/nutritionist-avatar.png",
+  "/user-avatar.png",
+  "/vercel.svg",
+  "/window.svg",
+
+  // CSS resources
+  "/globals.css",
+  "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css",
 ];
 
 // Install event - cache assets
-self.addEventListener('install', event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("Opened cache");
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
 // Fetch event - serve from cache if available
-self.addEventListener('fetch', event => {
+self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
+    caches.match(event.request).then((response) => {
+      // Cache hit - return response
+      if (response) {
+        return response;
+      }
+      return fetch(event.request).then((response) => {
+        // Check if we received a valid response
+        if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
         }
-        return fetch(event.request).then(
-          response => {
-            // Check if we received a valid response
-            if(!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
 
-            // Clone the response
-            const responseToCache = response.clone();
+        // Clone the response
+        const responseToCache = response.clone();
 
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
 
-            return response;
-          }
-        );
-      })
+        return response;
+      });
+    })
   );
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener("activate", (event) => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            // Delete old caches that are not in the whitelist
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// Handle offline fallback
+self.addEventListener("fetch", (event) => {
+  // Skip cross-origin requests
+  if (event.request.url.startsWith(self.location.origin) || event.request.url.includes("mapbox-gl-js") || event.request.url.includes("mapbox.com/styles")) {
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        // Return cached response if found
+        if (response) {
+          return response;
+        }
+
+        // Clone the request because it's a one-time use stream
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest)
+          .then((response) => {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== "basic") {
+              return response;
+            }
+
+            // Clone the response because it's a one-time use stream
+            const responseToCache = response.clone();
+
+            caches.open(CACHE_NAME).then((cache) => {
+              // Don't cache API responses or dynamic content
+              if (!event.request.url.includes("/api/")) {
+                cache.put(event.request, responseToCache);
+              }
+            });
+
+            return response;
+          })
+          .catch(() => {
+            // If the network is unavailable, try to return the cached '/' as a fallback
+            if (event.request.mode === "navigate") {
+              return caches.match("/");
+            }
+          });
+      })
+    );
+  }
+});
+self.addEventListener("activate", (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
             return caches.delete(cacheName);
           }

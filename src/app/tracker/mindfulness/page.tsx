@@ -10,14 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MindfulnessEntry } from "@/types/health-metrics";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
 import { ArrowLeft, BrainIcon, Timer } from "lucide-react";
+import { MINDFULNESS_TRACKER_CONFIG } from "@/data/mindfulness-tracker";
 
 export default function MindfulnessTrackerPage() {
   const router = useRouter();
-  const [minutes, setMinutes] = useState<number>(10);
-  const [activity, setActivity] = useState<string>("meditation");
+  const [minutes, setMinutes] = useState<number>(MINDFULNESS_TRACKER_CONFIG.defaultDuration);
+  const [activity, setActivity] = useState<string>(MINDFULNESS_TRACKER_CONFIG.meditationTypes[0].id);
   const [mindfulnessEntries, setMindfulnessEntries] = useState<MindfulnessEntry[]>([]);
   const [totalMinutes, setTotalMinutes] = useState<number>(0);
-  const [dailyGoal] = useState<number>(20); // 20 minutes daily goal
+  const [dailyGoal] = useState<number>(Math.round(MINDFULNESS_TRACKER_CONFIG.weeklyGoal / 7)); // Daily goal based on weekly goal
   
   // Load mindfulness entries on mount
   useEffect(() => {
@@ -57,14 +58,10 @@ export default function MindfulnessTrackerPage() {
   
   const progressPercentage = Math.min(100, (totalMinutes / dailyGoal) * 100);
   
-  const activityOptions = [
-    { value: "meditation", label: "Meditation" },
-    { value: "breathing", label: "Deep Breathing" },
-    { value: "yoga", label: "Yoga" },
-    { value: "journaling", label: "Journaling" },
-    { value: "walking", label: "Mindful Walking" },
-    { value: "gratitude", label: "Gratitude Practice" }
-  ];
+  const activityOptions = MINDFULNESS_TRACKER_CONFIG.meditationTypes.map(type => ({
+    value: type.id,
+    label: type.label
+  }));
   
   return (
     <div className="py-6 font-sans">
@@ -181,7 +178,7 @@ export default function MindfulnessTrackerPage() {
                 <Slider
                   value={[minutes]}
                   min={1}
-                  max={60}
+                  max={MINDFULNESS_TRACKER_CONFIG.durationOptions[MINDFULNESS_TRACKER_CONFIG.durationOptions.length - 1]}
                   step={1}
                   onValueChange={(value) => setMinutes(value[0])}
                   className="flex-1"
@@ -191,7 +188,7 @@ export default function MindfulnessTrackerPage() {
             
             {/* Quick add buttons */}
             <div className="grid grid-cols-3 gap-2">
-              {[5, 10, 20].map((mins) => (
+              {MINDFULNESS_TRACKER_CONFIG.durationOptions.slice(0, 3).map((mins) => (
                 <Button 
                   key={mins}
                   variant="outline" 

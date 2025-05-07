@@ -8,13 +8,14 @@ import { Slider } from "@/components/ui/slider";
 import { WaterIntake } from "@/types/health-metrics";
 import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
 import { ArrowLeft, Droplets, Plus, Minus } from "lucide-react";
+import { WATER_TRACKER_CONFIG } from "@/data/water-tracker";
 
 export default function WaterTrackerPage() {
   const router = useRouter();
-  const [waterAmount, setWaterAmount] = useState<number>(250); // Default 250ml
+  const [waterAmount, setWaterAmount] = useState<number>(WATER_TRACKER_CONFIG.defaultAmount);
   const [waterEntries, setWaterEntries] = useState<WaterIntake[]>([]);
   const [totalWater, setTotalWater] = useState<number>(0);
-  const [dailyGoal] = useState<number>(2500); // 2.5 liters daily goal
+  const [dailyGoal] = useState<number>(WATER_TRACKER_CONFIG.dailyGoal);
   
   // Load water entries on mount
   useEffect(() => {
@@ -126,16 +127,16 @@ export default function WaterTrackerPage() {
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  onClick={() => setWaterAmount(Math.max(50, waterAmount - 50))}
+                  onClick={() => setWaterAmount(Math.max(WATER_TRACKER_CONFIG.minAmount, waterAmount - WATER_TRACKER_CONFIG.stepSize))}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
                 
                 <Slider
                   value={[waterAmount]}
-                  min={50}
-                  max={1000}
-                  step={50}
+                  min={WATER_TRACKER_CONFIG.minAmount}
+                  max={WATER_TRACKER_CONFIG.maxAmount}
+                  step={WATER_TRACKER_CONFIG.stepSize}
                   onValueChange={(value) => setWaterAmount(value[0])}
                   className="flex-1"
                 />
@@ -143,7 +144,7 @@ export default function WaterTrackerPage() {
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  onClick={() => setWaterAmount(Math.min(1000, waterAmount + 50))}
+                  onClick={() => setWaterAmount(Math.min(WATER_TRACKER_CONFIG.maxAmount, waterAmount + WATER_TRACKER_CONFIG.stepSize))}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -152,7 +153,7 @@ export default function WaterTrackerPage() {
             
             {/* Quick add buttons */}
             <div className="grid grid-cols-3 gap-2">
-              {[100, 250, 500].map((amount) => (
+              {WATER_TRACKER_CONFIG.quickAddAmounts.map((amount) => (
                 <Button 
                   key={amount}
                   variant="outline" 

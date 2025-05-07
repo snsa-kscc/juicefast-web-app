@@ -23,43 +23,67 @@ export function HealthScoreCard({ score }: HealthScoreCardProps) {
     if (value >= 60) return "bg-yellow-600";
     return "bg-red-600";
   };
-  
+
   // Custom styled Progress component based on score
   const ScoreProgress = ({ value }: { value: number }) => {
     const colorClass = getProgressColor(value);
     return (
-      <Progress 
-        value={value} 
+      <Progress
+        value={value}
         className={cn("h-2", {
-          "[--progress-background:theme(colors.green.100)]" : value >= 80,
-          "[--progress-background:theme(colors.yellow.100)]" : value >= 60 && value < 80,
-          "[--progress-background:theme(colors.red.100)]" : value < 60
+          "[--progress-background:theme(colors.green.100)]": value >= 80,
+          "[--progress-background:theme(colors.yellow.100)]": value >= 60 && value < 80,
+          "[--progress-background:theme(colors.red.100)]": value < 60,
         })}
-        style={{
-          "--progress-foreground": `var(--${colorClass.replace('bg-', '')})`,
-        } as React.CSSProperties}
+        style={
+          {
+            "--progress-foreground": `var(--${colorClass.replace("bg-", "")})`,
+          } as React.CSSProperties
+        }
       />
     );
   };
 
+  // Calculate the stroke-dashoffset for the circle visualization
+  const circumference = 2 * Math.PI * 45; // 2πr where r=45
+  const strokeDashoffset = circumference - (circumference * score.total) / 100;
+
   return (
-    <Card className="w-full">
+    <Card className="w-full my-4">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl flex justify-between items-center">
           <span>Health Score</span>
-          <span className={`text-2xl font-bold ${getScoreColor(score.total)}`}>
-            {Math.round(score.total)}
-          </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Health Score Circle Visualization */}
+        <div className="flex justify-center mb-6">
+          <div className="relative w-32 h-32">
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="10" />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke={score.total >= 80 ? "#16a34a" : score.total >= 60 ? "#ca8a04" : "#dc2626"}
+                strokeWidth="10"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                transform="rotate(-90 50 50)"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className={`text-3xl font-bold ${getScoreColor(score.total)}`}>{Math.round(score.total)}</span>
+              <span className="text-xs text-gray-500">score</span>
+            </div>
+          </div>
+        </div>
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Nutrition</span>
-              <span className={getScoreColor(score.nutrition)}>
-                {Math.round(score.nutrition)}
-              </span>
+              <span className={getScoreColor(score.nutrition)}>{Math.round(score.nutrition)}</span>
             </div>
             <ScoreProgress value={score.nutrition} />
           </div>
@@ -67,9 +91,7 @@ export function HealthScoreCard({ score }: HealthScoreCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Water</span>
-              <span className={getScoreColor(score.water)}>
-                {Math.round(score.water)}
-              </span>
+              <span className={getScoreColor(score.water)}>{Math.round(score.water)}</span>
             </div>
             <ScoreProgress value={score.water} />
           </div>
@@ -77,9 +99,7 @@ export function HealthScoreCard({ score }: HealthScoreCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Steps</span>
-              <span className={getScoreColor(score.steps)}>
-                {Math.round(score.steps)}
-              </span>
+              <span className={getScoreColor(score.steps)}>{Math.round(score.steps)}</span>
             </div>
             <ScoreProgress value={score.steps} />
           </div>
@@ -87,9 +107,7 @@ export function HealthScoreCard({ score }: HealthScoreCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Sleep</span>
-              <span className={getScoreColor(score.sleep)}>
-                {Math.round(score.sleep)}
-              </span>
+              <span className={getScoreColor(score.sleep)}>{Math.round(score.sleep)}</span>
             </div>
             <ScoreProgress value={score.sleep} />
           </div>
@@ -97,9 +115,7 @@ export function HealthScoreCard({ score }: HealthScoreCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Mindfulness</span>
-              <span className={getScoreColor(score.mindfulness)}>
-                {Math.round(score.mindfulness)}
-              </span>
+              <span className={getScoreColor(score.mindfulness)}>{Math.round(score.mindfulness)}</span>
             </div>
             <ScoreProgress value={score.mindfulness} />
           </div>
