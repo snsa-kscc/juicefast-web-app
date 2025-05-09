@@ -13,7 +13,11 @@ export type QuizAnswer = {
   answer: string | string[];
 };
 
-export function OnboardingQuiz() {
+interface OnboardingQuizProps {
+  onComplete?: () => void;
+}
+
+export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
@@ -67,12 +71,22 @@ export function OnboardingQuiz() {
     router.push("/");
   };
 
+  const handleComplete = () => {
+    // Call the onComplete callback if provided
+    if (onComplete) {
+      onComplete();
+    } else {
+      // Default behavior if no callback is provided
+      router.push("/");
+    }
+  };
+
   // Render the appropriate step
   const renderStep = () => {
     if (currentStep === 0) {
       return <QuizStart onStart={handleStart} onAbort={handleAbort} />;
     } else if (currentStep === totalSteps - 1) {
-      return <QuizComplete answers={answers} onReset={handleReset} onAbort={handleAbort} />;
+      return <QuizComplete answers={answers} onReset={handleReset} onAbort={handleAbort} onComplete={handleComplete} />;
     } else {
       const questionIndex = currentStep - 1;
       const question = quizQuestions[questionIndex];

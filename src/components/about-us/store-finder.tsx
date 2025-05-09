@@ -9,18 +9,18 @@ import { STORE_LOCATIONS, StoreLocation } from "@/data/store-locations";
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
 // Disable Mapbox telemetry and tracking completely
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Create a proxy for fetch to block Mapbox telemetry requests
   const originalFetch = window.fetch;
-  window.fetch = function(input, init) {
-    const url = typeof input === 'string' ? input : input instanceof Request ? input.url : '';
-    
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+
     // Block any requests to Mapbox events/telemetry endpoints
-    if (url.includes('events.mapbox.com') || url.includes('api.mapbox.com/events')) {
-      console.log('Blocked Mapbox telemetry request:', url);
-      return Promise.resolve(new Response('', { status: 200 }));
+    if (url.includes("events.mapbox.com") || url.includes("api.mapbox.com/events")) {
+      console.log("Blocked Mapbox telemetry request:", url);
+      return Promise.resolve(new Response("", { status: 200 }));
     }
-    
+
     return originalFetch(input, init);
   };
 }
@@ -70,9 +70,9 @@ export function StoreFinder() {
   // Initialize the map when the component mounts or when selected store changes
   useEffect(() => {
     if (!selectedStore || !mapContainerRef.current) return;
-    
+
     // Access token is already set globally at the top of the file
-    
+
     // If map already exists, try to remove it safely before creating a new one
     try {
       if (mapRef.current) {
@@ -81,7 +81,7 @@ export function StoreFinder() {
     } catch (error) {
       console.log("Error removing previous map:", error);
     }
-    
+
     // Create new map with all telemetry and tracking disabled
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -89,46 +89,46 @@ export function StoreFinder() {
       center: [selectedStore.lng, selectedStore.lat],
       zoom: 12,
       trackResize: true,
-      collectResourceTiming: false,  // Disable telemetry collection
-      attributionControl: false,     // Disable attribution which also sends requests
-      refreshExpiredTiles: false,    // Disable refreshing expired tiles
-      fadeDuration: 0,               // Disable fade animations
-      crossSourceCollisions: false   // Disable cross source collisions
+      collectResourceTiming: false, // Disable telemetry collection
+      attributionControl: false, // Disable attribution which also sends requests
+      refreshExpiredTiles: false, // Disable refreshing expired tiles
+      fadeDuration: 0, // Disable fade animations
+      crossSourceCollisions: false, // Disable cross source collisions
     });
-    
+
     // Add navigation controls
     mapRef.current.addControl(new mapboxgl.NavigationControl());
-    
+
     // Add markers for all filtered stores
     filteredStores.forEach((store) => {
       // Create a popup
-      const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(
-          `
-          <div>
-            <h3 style="font-weight: bold; margin-bottom: 5px;">${store.name}</h3>
-            <p style="margin: 2px 0;">${store.address}, ${store.city}, ${store.state} ${store.zipCode}</p>
-            <p style="margin: 2px 0;">Phone: ${store.phone}</p>
-            <p style="margin: 2px 0;">Hours: ${store.hours}</p>
-          </div>
-        `
-        )
-        .setMaxWidth("300px");
-    
+      // const popup = new mapboxgl.Popup({ offset: 25 })
+      //   .setHTML(
+      //     `
+      //     <div>
+      //       <h3 style="font-weight: bold; margin-bottom: 5px;">${store.name}</h3>
+      //       <p style="margin: 2px 0;">${store.address}, ${store.city}, ${store.state} ${store.zipCode}</p>
+      //       <p style="margin: 2px 0;">Phone: ${store.phone}</p>
+      //       <p style="margin: 2px 0;">Hours: ${store.hours}</p>
+      //     </div>
+      //   `
+      //   )
+      //   .setMaxWidth("300px");
+
       // Create a marker
       const marker = new mapboxgl.Marker({
         color: store.id === selectedStore.id ? "#ff0000" : "#3FB1CE",
       })
         .setLngLat([store.lng, store.lat])
-        .setPopup(popup)
+        // .setPopup(popup)
         .addTo(mapRef.current);
-    
+
       // If this is the selected store, open the popup
       if (store.id === selectedStore.id) {
         marker.togglePopup();
       }
     });
-    
+
     // Set map as loaded
     setMapLoaded(true);
 

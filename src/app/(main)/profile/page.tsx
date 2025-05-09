@@ -162,7 +162,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="bg-primary/10 p-3 rounded-md text-sm">
-                  <p className="text-gray-700">Invite friends and earn rewards! Each successful referral gives you both 500 bonus points.</p>
+                  <p className="text-gray-700">Invite friends.</p>
                 </div>
               </div>
             </CardContent>
@@ -170,7 +170,7 @@ export default function ProfilePage() {
 
           {/* Quick Links */}
           <div className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
+            {/* <Button variant="outline" className="w-full justify-start">
               <SettingsIcon className="h-4 w-4 mr-2" />
               Settings
             </Button>
@@ -183,7 +183,7 @@ export default function ProfilePage() {
             <Button variant="outline" className="w-full justify-start" onClick={() => router.push("/health-data")}>
               <HeartIcon className="h-4 w-4 mr-2" />
               Health Data
-            </Button>
+            </Button> */}
 
             <Button variant="outline" className="w-full justify-start text-red-500 hover:text-red-600">
               <LogOutIcon className="h-4 w-4 mr-2" />
@@ -223,8 +223,6 @@ export default function ProfilePage() {
                   <SelectContent>
                     <SelectItem value="male">Male</SelectItem>
                     <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="non-binary">Non-binary</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
                     <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
                   </SelectContent>
                 </Select>

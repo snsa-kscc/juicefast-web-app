@@ -17,7 +17,7 @@ export const signInEmail = validatedAction(LoginSchema, async (data) => {
 
     return {
       success: true,
-      redirectTo: "/dashboard",
+      redirectTo: "/onboarding",
     };
   } catch (error) {
     console.error("Sign in error:", error);
@@ -45,31 +45,29 @@ export const signUpEmail = validatedAction(SignUpSchema, async (data) => {
         // In a real app, you would query a database to find the user with this referral code
         // For this demo, we'll use localStorage to simulate this
         // Note: In a real app, this would be a server-side database operation
-        
+
         // Get all user profiles (in a real app, this would be a database query)
         // This is a simplified approach for demo purposes
         const allProfiles = getAllUserProfiles();
-        
+
         // Find the referrer profile
-        const referrerProfile = allProfiles.find(profile => 
-          profile.referralCode === data.referralCode
-        );
-        
+        const referrerProfile = allProfiles.find((profile) => profile.referralCode === data.referralCode);
+
         if (referrerProfile) {
           // Update referrer's stats
           referrerProfile.referralCount = (referrerProfile.referralCount || 0) + 1;
           referrerProfile.referrals = [...(referrerProfile.referrals || []), data.email];
-          
+
           // Save updated referrer profile
           saveUserProfile(referrerProfile);
-          
+
           // Create initial profile for the new user with referredBy field
           const newUserProfile: UserProfile = {
             id: result.user?.id, // Use user.id from auth result
             height: 170, // Default value
             referredBy: data.referralCode,
           };
-          
+
           // Save the new user's profile
           saveUserProfile(newUserProfile);
         }
@@ -81,7 +79,7 @@ export const signUpEmail = validatedAction(SignUpSchema, async (data) => {
 
     return {
       success: true,
-      redirectTo: "/dashboard",
+      redirectTo: "/onboarding",
     };
   } catch (error) {
     console.error("Sign up error:", error);
