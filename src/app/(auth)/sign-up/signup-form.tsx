@@ -18,14 +18,14 @@ import { extractReferralCode } from "@/lib/referral-utils";
 // Component to handle the referral code from URL parameters
 function ReferralCodeHandler({ setReferralCode }: { setReferralCode: (code: string) => void }) {
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
-    const refCode = searchParams.get('ref');
+    const refCode = searchParams.get("ref");
     if (refCode) {
       setReferralCode(refCode);
     }
   }, [searchParams, setReferralCode]);
-  
+
   return null;
 }
 
@@ -77,10 +77,10 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
                   <span>Referral Code</span>
                   <span className="text-xs text-gray-500 ml-1">(optional)</span>
                 </Label>
-                <Input 
-                  name="referralCode" 
-                  id="referralCode" 
-                  type="text" 
+                <Input
+                  name="referralCode"
+                  id="referralCode"
+                  type="text"
                   placeholder="Enter referral code if you have one"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
@@ -106,7 +106,7 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
                 onClick={async () => {
                   await authClient.signIn.social({
                     provider: "google",
-                    callbackURL: "/dashboard",
+                    callbackURL: "/onboarding",
                   });
                 }}
               >

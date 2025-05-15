@@ -68,7 +68,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 onClick={async () => {
                   await authClient.signIn.social({
                     provider: "google",
-                    callbackURL: "/dashboard",
+                    callbackURL: "/onboarding",
                   });
                 }}
               >
