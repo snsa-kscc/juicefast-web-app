@@ -63,6 +63,44 @@ const MOCK_NUTRITIONISTS: NutritionistProfile[] = [
     },
     averageResponseTime: 7,
   },
+  {
+    id: "4",
+    name: "Dr. Michael Green",
+    email: "michael.green@example.com",
+    specialties: ["Sports Performance", "Metabolic Health", "Athletic Nutrition"],
+    bio: "Former Olympic athlete turned nutritionist specializing in optimizing performance for competitive athletes and fitness enthusiasts.",
+    photoUrl: "/nutritionist-avatar.png",
+    availability: {
+      available: true,
+      workingHours: {
+        Monday: { start: "07:00", end: "15:00" },
+        Tuesday: { start: "07:00", end: "15:00" },
+        Wednesday: { start: "07:00", end: "15:00" },
+        Thursday: { start: "07:00", end: "15:00" },
+        Friday: { start: "07:00", end: "13:00" },
+      },
+    },
+    averageResponseTime: 6,
+  },
+  {
+    id: "5",
+    name: "Emma Rodriguez",
+    email: "emma.rodriguez@example.com",
+    specialties: ["Eating Disorders", "Mental Health Nutrition", "Body Positivity"],
+    bio: "Nutritionist and therapist with a compassionate approach to healing relationships with food and body image.",
+    photoUrl: "/nutritionist-avatar.png",
+    availability: {
+      available: true,
+      workingHours: {
+        Monday: { start: "11:00", end: "19:00" },
+        Tuesday: { start: "11:00", end: "19:00" },
+        Wednesday: { start: "11:00", end: "19:00" },
+        Thursday: { start: "11:00", end: "19:00" },
+        Friday: { start: "11:00", end: "17:00" },
+      },
+    },
+    averageResponseTime: 8,
+  },
 ];
 
 // Mock storage for chat sessions and messages
@@ -70,6 +108,13 @@ let activeSessions: ChatSession[] = [];
 let sessionMessages: Record<string, MessageType[]> = {};
 let sessionRequests: SessionRequest[] = [];
 let notifications: ChatNotification[] = [];
+
+// Mock user data
+const MOCK_USERS = [
+  { id: "user1", name: "John Doe" },
+  { id: "user2", name: "Jane Smith" },
+  { id: "user3", name: "Alex Johnson" },
+];
 
 // Helper to save data to localStorage
 const saveToLocalStorage = () => {
@@ -467,4 +512,62 @@ export const getNutritionistStatus = (nutritionistId: string): AvailabilityStatu
   const hasActiveSession = activeSessions.some((s) => s.nutritionistId === nutritionistId && s.status === "active");
 
   return hasActiveSession ? "busy" : "online";
+};
+
+// Get all sessions for a nutritionist
+export const getNutritionistSessions = (nutritionistId: string): ChatSession[] => {
+  initializeData();
+  
+  // Add user names to sessions for display purposes
+  return activeSessions
+    .filter(session => session.nutritionistId === nutritionistId)
+    .map(session => {
+      const user = MOCK_USERS.find(u => u.id === session.userId);
+      return {
+        ...session,
+        userName: user?.name || `User ${session.userId}`
+      };
+    });
+};
+
+// Get pending requests for a nutritionist
+export const getNutritionistPendingRequests = (nutritionistId: string): SessionRequest[] => {
+  initializeData();
+  
+  // Get requests that are either specifically for this nutritionist or unassigned
+  const requests = sessionRequests.filter(req => 
+    req.status === "pending" && 
+    (req.requestedNutritionistId === nutritionistId || !req.requestedNutritionistId)
+  );
+  
+  // Add user names for display purposes
+  return requests.map(request => {
+    const user = MOCK_USERS.find(u => u.id === request.userId);
+    return {
+      ...request,
+      userName: user?.name || `User ${request.userId}`
+    };
+  });
+};
+
+// Get all messages for a nutritionist (across all sessions)
+export const getNutritionistAllMessages = (nutritionistId: string): Record<string, MessageType[]> => {
+  initializeData();
+  
+  const nutritionistSessions = activeSessions.filter(s => s.nutritionistId === nutritionistId);
+  const result: Record<string, MessageType[]> = {};
+  
+  nutritionistSessions.forEach(session => {
+    if (sessionMessages[session.id]) {
+      result[session.id] = sessionMessages[session.id];
+    }
+  });
+  
+  return result;
+};
+
+// Get notifications for a nutritionist
+export const getNutritionistNotifications = (nutritionistId: string): ChatNotification[] => {
+  initializeData();
+  return notifications.filter(n => n.recipientId === nutritionistId && n.recipientType === "nutritionist");
 };
