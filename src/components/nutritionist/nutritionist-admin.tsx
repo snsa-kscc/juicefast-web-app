@@ -10,14 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { ChatInput } from "./chat-input";
 import { ChatMessage, MessageType } from "./chat-message";
 import {
-  getNutritionistSessions,
+  getNutritionistActiveSessions,
   getChatMessages,
   sendMessage,
   endChatSession,
-  acceptChatRequest,
-  rejectChatRequest,
-  getNutritionistPendingRequests,
-} from "@/lib/nutritionist-service";
+  acceptSessionRequest,
+  rejectSessionRequest,
+} from "@/app/actions/nutritionist";
+import { getNutritionistPendingSessionRequests } from "@/app/actions/nutritionist/db-actions";
+import { ChatSession, SessionRequest } from "@/types/nutritionist";
 
 interface NutritionistAdminProps {
   nutritionistId: string;
@@ -37,20 +38,27 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
   // Load data on mount and when refresh is triggered
   useEffect(() => {
     const loadData = async () => {
-      // Get all sessions for this nutritionist
-      const allSessions = getNutritionistSessions(nutritionistId);
+      try {
+        // Get active sessions for this nutritionist
+        const activeSessions = await getNutritionistActiveSessions(nutritionistId);
+        setActiveSessions(activeSessions);
+        
+        // For completed sessions, we need to get all sessions and filter
+        // TODO: Add a dedicated API for completed sessions
+        const allSessions = await getNutritionistActiveSessions(nutritionistId);
+        setCompletedSessions(allSessions.filter((s: ChatSession) => s.status === "ended"));
 
-      // Filter sessions by status
-      setActiveSessions(allSessions.filter((s) => s.status === "active"));
-      setCompletedSessions(allSessions.filter((s) => s.status === "ended"));
+        // Get pending requests
+        const pendingRequests = await getNutritionistPendingSessionRequests(nutritionistId);
+        setPendingRequests(pendingRequests);
 
-      // Get pending requests
-      setPendingRequests(getNutritionistPendingRequests(nutritionistId));
-
-      // Load messages for selected session
-      if (selectedSession) {
-        const sessionMessages = getChatMessages(selectedSession);
-        setMessages(sessionMessages);
+        // Load messages for selected session
+        if (selectedSession) {
+          const sessionMessages = await getChatMessages(selectedSession);
+          setMessages(sessionMessages);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
       }
     };
 
@@ -74,7 +82,7 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
       await sendMessage(selectedSession, content, "nutritionist", nutritionistId);
 
       // Refresh messages
-      const updatedMessages = getChatMessages(selectedSession);
+      const updatedMessages = await getChatMessages(selectedSession);
       setMessages(updatedMessages);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -99,7 +107,7 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
   // Handle accepting a chat request
   const handleAcceptRequest = async (requestId: string) => {
     try {
-      const session = await acceptChatRequest(requestId, nutritionistId);
+      const session = await acceptSessionRequest(requestId, nutritionistId);
       if (session) {
         setRefreshTrigger((prev) => prev + 1);
         setSelectedSession(session.id);
@@ -113,7 +121,7 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
   // Handle rejecting a chat request
   const handleRejectRequest = async (requestId: string) => {
     try {
-      await rejectChatRequest(requestId);
+      await rejectSessionRequest(requestId, nutritionistId);
       setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Error rejecting request:", error);
@@ -121,10 +129,15 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
   };
 
   // Select a session to view
-  const handleSelectSession = (sessionId: string) => {
+  const handleSelectSession = async (sessionId: string) => {
     setSelectedSession(sessionId);
-    const sessionMessages = getChatMessages(sessionId);
-    setMessages(sessionMessages);
+    try {
+      const sessionMessages = await getChatMessages(sessionId);
+      setMessages(sessionMessages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      setMessages([]);
+    }
   };
 
   // Render session list item

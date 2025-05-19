@@ -2,6 +2,7 @@
 
 export interface NutritionistProfile {
   id: string;
+  userId?: string; // Reference to the user who is a nutritionist
   name: string;
   email: string;
   specialties: string[];
@@ -28,17 +29,25 @@ export interface ChatSession {
   startedAt: Date;
   endedAt?: Date;
   lastMessageAt?: Date;
+  // Additional fields for UI display
+  userName?: string;
+  nutritionistName?: string;
+  endedBy?: 'user' | 'nutritionist';
+  createdAt: Date; // When the session was created
 }
 
 export interface ChatNotification {
   id: string;
   recipientId: string;
   recipientType: 'user' | 'nutritionist';
-  sessionId: string;
-  type: 'new_message' | 'session_request' | 'nutritionist_available' | 'session_ended';
+  sessionId?: string;
+  requestId?: string;
+  type: 'new_message' | 'session_request' | 'session_accepted' | 'session_rejected' | 'session_ended' | 'nutritionist_available';
   read: boolean;
   createdAt: Date;
   message: string;
+  content?: string; // Alternative to message for flexibility
+  relatedEntityId?: string | null; // Generic reference to related entity (session or request)
 }
 
 // Status of a nutritionist's availability
@@ -49,10 +58,12 @@ export interface SessionRequest {
   id: string;
   userId: string;
   requestedNutritionistId?: string; // Optional - if user requests specific nutritionist
-  userQuery?: string; // Initial question/concern from user
-  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  initialQuery?: string; // Initial question/concern from user
+  status: 'pending' | 'active' | 'ended' | 'rejected' | 'expired';
   createdAt: Date;
-  expiresAt: Date; // When the request expires if not accepted
+  expiresAt?: Date; // When the request expires if not accepted
   acceptedAt?: Date;
   rejectedAt?: Date;
+  // Additional fields for UI display
+  userName?: string;
 }

@@ -4,9 +4,12 @@ import { cn } from "@/lib/utils";
 
 export type MessageType = {
   id: string;
+  sessionId: string;
   content: string;
   sender: "user" | "nutritionist";
+  senderId: string;
   timestamp: Date;
+  read?: boolean;
 };
 
 interface ChatMessageProps {
