@@ -16,74 +16,128 @@ import {
   endChatSession,
   acceptSessionRequest,
   rejectSessionRequest,
-} from "@/app/actions/nutritionist";
-import { getNutritionistPendingSessionRequests } from "@/app/actions/nutritionist/db-actions";
+  getNutritionistPendingSessionRequests,
+} from "@/app/actions/nutritionist-actions";
 import { ChatSession, SessionRequest } from "@/types/nutritionist";
 
 interface NutritionistAdminProps {
   nutritionistId: string;
+  initialActiveSessions: ChatSession[];
+  initialPendingRequests: SessionRequest[];
+  initialCompletedSessions: ChatSession[];
+  initialSessionMessages: Record<string, MessageType[]>;
 }
 
-export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
+export function NutritionistAdmin({
+  nutritionistId,
+  initialActiveSessions,
+  initialPendingRequests,
+  initialCompletedSessions,
+  initialSessionMessages,
+}: NutritionistAdminProps) {
   // State for admin UI
   const [activeTab, setActiveTab] = useState("active");
-  const [activeSessions, setActiveSessions] = useState<any[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-  const [completedSessions, setCompletedSessions] = useState<any[]>([]);
+  const [activeSessions, setActiveSessions] = useState<ChatSession[]>(initialActiveSessions);
+  const [pendingRequests, setPendingRequests] = useState<SessionRequest[]>(initialPendingRequests);
+  const [completedSessions, setCompletedSessions] = useState<ChatSession[]>(initialCompletedSessions);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
-  const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Load data on mount and when refresh is triggered
+  // Store all messages in a map keyed by session ID
+  const [allMessages, setAllMessages] = useState<Record<string, MessageType[]>>(initialSessionMessages);
+
+  // Current messages for the selected session
+  const messages = selectedSession ? allMessages[selectedSession] || [] : [];
+
+  // Periodic refresh of data
   useEffect(() => {
     const loadData = async () => {
       try {
         // Get active sessions for this nutritionist
         const activeSessions = await getNutritionistActiveSessions(nutritionistId);
-        setActiveSessions(activeSessions);
-        
+        setActiveSessions(activeSessions.filter((s: ChatSession) => s.status !== "ended"));
+
         // For completed sessions, we need to get all sessions and filter
-        // TODO: Add a dedicated API for completed sessions
-        const allSessions = await getNutritionistActiveSessions(nutritionistId);
-        setCompletedSessions(allSessions.filter((s: ChatSession) => s.status === "ended"));
+        setCompletedSessions(activeSessions.filter((s: ChatSession) => s.status === "ended"));
 
         // Get pending requests
         const pendingRequests = await getNutritionistPendingSessionRequests(nutritionistId);
         setPendingRequests(pendingRequests);
 
-        // Load messages for selected session
-        if (selectedSession) {
-          const sessionMessages = await getChatMessages(selectedSession);
-          setMessages(sessionMessages);
+        // Load messages for all active sessions
+        const updatedMessages = { ...allMessages };
+        let hasNewMessages = false;
+
+        for (const session of activeSessions.filter((s: ChatSession) => s.status !== "ended")) {
+          try {
+            const sessionMessages = await getChatMessages(session.id);
+            if (JSON.stringify(sessionMessages) !== JSON.stringify(updatedMessages[session.id] || [])) {
+              updatedMessages[session.id] = sessionMessages;
+              hasNewMessages = true;
+              console.log(`Updated ${sessionMessages.length} messages for session ${session.id}`);
+            }
+          } catch (error) {
+            console.error(`Error fetching messages for session ${session.id}:`, error);
+          }
+        }
+
+        if (hasNewMessages) {
+          setAllMessages(updatedMessages);
         }
       } catch (error) {
         console.error("Error loading data:", error);
       }
     };
 
-    loadData();
-
     // Set up interval to refresh data
     const intervalId = setInterval(() => {
       loadData();
-    }, 10000); // Refresh every 10 seconds
+    }, 30000); // Refresh every 30 seconds
+
+    // Also refresh when the refresh trigger changes
+    if (refreshTrigger > 0) {
+      loadData();
+    }
 
     return () => clearInterval(intervalId);
-  }, [nutritionistId, selectedSession, refreshTrigger]);
+  }, [nutritionistId, refreshTrigger, allMessages]);
 
-  // Handle sending a message
+  // Update active tab when selected session changes
+  useEffect(() => {
+    if (selectedSession) {
+      // If we have a selected session, make sure we're on the active tab
+      const isInActiveSessions = activeSessions.some((s) => s.id === selectedSession);
+      const isInCompletedSessions = completedSessions.some((s) => s.id === selectedSession);
+
+      if (isInActiveSessions) {
+        setActiveTab("active");
+      } else if (isInCompletedSessions) {
+        setActiveTab("completed");
+      }
+    }
+  }, [selectedSession, activeSessions, completedSessions]);
+
+  // Handle sending a message using the server action
   const handleSendMessage = async (content: string) => {
     if (!selectedSession || !content.trim()) return;
 
     setIsLoading(true);
 
     try {
-      await sendMessage(selectedSession, content, "nutritionist", nutritionistId);
+      // Use the server action directly
+      const result = await sendMessage(selectedSession, content, "nutritionist", nutritionistId);
 
-      // Refresh messages
-      const updatedMessages = await getChatMessages(selectedSession);
-      setMessages(updatedMessages);
+      if ("error" in result) {
+        console.error("Error sending message:", result.error);
+        return;
+      }
+
+      // Add the new message to the existing messages for this session
+      setAllMessages((prevMessages) => ({
+        ...prevMessages,
+        [selectedSession]: [...(prevMessages[selectedSession] || []), result],
+      }));
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -97,8 +151,11 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
 
     try {
       await endChatSession(selectedSession, "nutritionist");
+
+      // Update local state
       setRefreshTrigger((prev) => prev + 1);
       setSelectedSession(null);
+      // No need to clear messages as they're derived from selectedSession now
     } catch (error) {
       console.error("Error ending session:", error);
     }
@@ -109,9 +166,12 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
     try {
       const session = await acceptSessionRequest(requestId, nutritionistId);
       if (session) {
+        // Update local state
         setRefreshTrigger((prev) => prev + 1);
-        setSelectedSession(session.id);
-        setActiveTab("active");
+        setActiveTab("active"); // Switch to active tab
+
+        // Select the new session
+        await handleSelectSession(session.id);
       }
     } catch (error) {
       console.error("Error accepting request:", error);
@@ -130,14 +190,18 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
 
   // Select a session to view
   const handleSelectSession = async (sessionId: string) => {
-    setSelectedSession(sessionId);
-    try {
-      const sessionMessages = await getChatMessages(sessionId);
-      setMessages(sessionMessages);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setMessages([]);
+    if (sessionId === selectedSession) {
+      // If clicking the already selected session, deselect it
+      setSelectedSession(null);
+      return;
     }
+
+    console.log("Selecting session:", sessionId);
+    console.log("Current messages for this session:", allMessages[sessionId] || []);
+    setSelectedSession(sessionId);
+
+    // No need to fetch messages here as they're already loaded in initialSessionMessages
+    // and are periodically refreshed by the useEffect
   };
 
   // Render session list item
@@ -273,9 +337,73 @@ export function NutritionistAdmin({ nutritionistId }: NutritionistAdminProps) {
 
               <ScrollArea className="flex-1 p-4">
                 {messages.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8">No messages yet</div>
+                  <div className="text-center text-gray-500 py-8">
+                    <p>No messages yet</p>
+                    <p className="text-xs mt-2">Session ID: {selectedSession}</p>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => {
+                          console.log("Current messages state:", messages);
+                          console.log("Refreshing messages for session:", selectedSession);
+                          if (selectedSession) {
+                            getChatMessages(selectedSession).then((msgs) => {
+                              console.log("Refreshed messages:", msgs);
+                              setAllMessages((prev) => ({
+                                ...prev,
+                                [selectedSession]: msgs,
+                              }));
+                            });
+                          }
+                        }}
+                        className="text-blue-500 underline text-xs"
+                      >
+                        Debug: Refresh Messages
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (selectedSession) {
+                            // Create a test message to see if rendering works
+                            const testMessage = {
+                              id: `test-${Date.now()}`,
+                              sessionId: selectedSession,
+                              content: `Test message created at ${new Date().toLocaleTimeString()}`,
+                              sender: "nutritionist" as const,
+                              senderId: nutritionistId,
+                              timestamp: new Date(),
+                              read: false,
+                            };
+                            console.log("Adding test message:", testMessage);
+
+                            // Update the allMessages state with the test message
+                            setAllMessages((prev) => ({
+                              ...prev,
+                              [selectedSession]: [...(prev[selectedSession] || []), testMessage],
+                            }));
+
+                            // Also try sending a real message to the database
+                            sendMessage(selectedSession, `Test message sent at ${new Date().toLocaleTimeString()}`, "nutritionist", nutritionistId)
+                              .then((result) => {
+                                console.log("Send message result:", result);
+                              })
+                              .catch((err) => {
+                                console.error("Error sending test message:", err);
+                              });
+                          }
+                        }}
+                        className="text-blue-500 underline text-xs"
+                      >
+                        Debug: Add Test Message
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  messages.map((message) => <ChatMessage key={message.id} message={message} />)
+                  <>
+                    <div className="mb-4 text-xs text-gray-500">Showing {messages.length} message(s)</div>
+                    {messages.map((message) => (
+                      <ChatMessage key={message.id} message={message} />
+                    ))}
+                  </>
                 )}
               </ScrollArea>
 

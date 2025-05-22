@@ -8,6 +8,20 @@
       "when": 1746207601957,
       "tag": "0000_closed_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1747849083377,
+      "tag": "0001_melted_jubilee",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1747849857129,
+      "tag": "0002_sweet_rage",
+      "breakpoints": true
     }
   ]
 }

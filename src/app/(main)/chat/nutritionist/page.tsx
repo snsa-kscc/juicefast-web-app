@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon } from "lucide-react";
 import { NutritionistChat } from "@/components/nutritionist/nutritionist-chat";
 import Link from "next/link";
-import { getNutritionists, getUserActiveChatSession, getChatMessages } from "@/app/actions/nutritionist";
+import { getNutritionists, getUserActiveChatSession, getChatMessages } from "@/app/actions/nutritionist-actions";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 
@@ -12,7 +12,7 @@ export default async function NutritionistChatPage() {
   });
 
   // Fallback to a demo user ID if not authenticated
-  const userId = session?.user?.id || "user-123";
+  const userId = session?.user?.id ?? "";
 
   // Fetch data needed for the chat
   const nutritionists = await getNutritionists();
@@ -23,6 +23,7 @@ export default async function NutritionistChatPage() {
 
   return (
     <div className="py-6 font-sans h-[calc(100vh-4rem)] flex flex-col">
+      <p>{session?.user.email}</p>
       <div className="flex items-center mb-4">
         <Link href="/chat">
           <Button variant="ghost" size="icon" className="mr-2">

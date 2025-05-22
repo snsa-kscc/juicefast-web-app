@@ -7,7 +7,6 @@ export const user = pgTable("jf-user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
-  isAdmin: boolean("is_admin").default(false), // Added isAdmin flag
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
@@ -53,15 +52,17 @@ export const verification = pgTable("jf-verification", {
 });
 
 // Nutritionist chat enums
-export const sessionStatusEnum = pgEnum('js-session_status', ['pending', 'active', 'ended']);
-export const availabilityStatusEnum = pgEnum('js-availability_status', ['online', 'busy', 'away', 'offline']);
-export const senderTypeEnum = pgEnum('js-sender_type', ['user', 'nutritionist']);
-export const notificationTypeEnum = pgEnum('js-notification_type', ['new_message', 'session_request', 'session_accepted', 'session_rejected', 'session_ended']);
+export const sessionStatusEnum = pgEnum("jf-session_status", ["pending", "active", "ended"]);
+export const availabilityStatusEnum = pgEnum("jf-availability_status", ["online", "busy", "away", "offline"]);
+export const senderTypeEnum = pgEnum("jf-sender_type", ["user", "nutritionist"]);
+export const notificationTypeEnum = pgEnum("jf-notification_type", ["new_message", "session_request", "session_accepted", "session_rejected", "session_ended"]);
 
 // Nutritionist tables
-export const nutritionistProfile = pgTable("js-nutritionist_profile", {
+export const nutritionistProfile = pgTable("jf-nutritionist_profile", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   email: text("email").notNull(),
   specialties: json("specialties").$type<string[]>().notNull(),
@@ -75,11 +76,15 @@ export const nutritionistProfile = pgTable("js-nutritionist_profile", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const chatSession = pgTable("js-chat_session", {
+export const chatSession = pgTable("jf-chat_session", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  nutritionistId: text("nutritionist_id").notNull().references(() => nutritionistProfile.id, { onDelete: "cascade" }),
-  status: sessionStatusEnum("status").notNull().default('active'),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  nutritionistId: text("nutritionist_id")
+    .notNull()
+    .references(() => nutritionistProfile.id, { onDelete: "cascade" }),
+  status: sessionStatusEnum("status").notNull().default("active"),
   startedAt: timestamp("started_at").notNull().defaultNow(),
   endedAt: timestamp("ended_at"),
   endedBy: senderTypeEnum("ended_by"),
@@ -87,9 +92,11 @@ export const chatSession = pgTable("js-chat_session", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const chatMessage = pgTable("js-chat_message", {
+export const chatMessage = pgTable("jf-chat_message", {
   id: text("id").primaryKey(),
-  sessionId: text("session_id").notNull().references(() => chatSession.id, { onDelete: "cascade" }),
+  sessionId: text("session_id")
+    .notNull()
+    .references(() => chatSession.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   sender: senderTypeEnum("sender").notNull(),
   senderId: text("sender_id").notNull(),
@@ -97,17 +104,19 @@ export const chatMessage = pgTable("js-chat_message", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const sessionRequest = pgTable("js-session_request", {
+export const sessionRequest = pgTable("jf-session_request", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
   requestedNutritionistId: text("requested_nutritionist_id").references(() => nutritionistProfile.id),
   initialQuery: text("initial_query"),
-  status: sessionStatusEnum("status").notNull().default('pending'),
+  status: sessionStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const chatNotification = pgTable("js-chat_notification", {
+export const chatNotification = pgTable("jf-chat_notification", {
   id: text("id").primaryKey(),
   recipientId: text("recipient_id").notNull(),
   recipientType: senderTypeEnum("recipient_type").notNull(),

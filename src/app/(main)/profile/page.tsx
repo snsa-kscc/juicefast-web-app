@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { UserProfile } from "@/types/health-metrics";
 import { loadUserProfile, saveUserProfile } from "@/lib/daily-tracking-store";
 import { UserIcon, RulerIcon, ScaleIcon, CalendarIcon, ActivityIcon, LogOutIcon, SettingsIcon, BellIcon, HeartIcon, BadgeIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -53,6 +54,16 @@ export default function ProfilePage() {
     setProfile(updatedProfile);
     saveUserProfile(updatedProfile);
     setIsEditing(false);
+  };
+
+  const handleSignOut = () => {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/"); // redirect to login page
+        },
+      },
+    });
   };
 
   return (
@@ -185,7 +196,7 @@ export default function ProfilePage() {
               Health Data
             </Button> */}
 
-            <Button variant="outline" className="w-full justify-start text-red-500 hover:text-red-600">
+            <Button onClick={() => handleSignOut()} variant="outline" className="w-full justify-start text-red-500 hover:text-red-600">
               <LogOutIcon className="h-4 w-4 mr-2" />
               Sign Out
             </Button>

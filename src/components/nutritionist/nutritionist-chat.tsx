@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 // Import the new nutritionist actions
 import {
   getNutritionists,
@@ -23,6 +24,7 @@ import {
   sendMessage,
   endChatSession,
   getNutritionistStatus,
+  createDirectChatSession,
 } from "@/app/actions/nutritionist";
 
 // Define types
@@ -90,36 +92,84 @@ const StatusBadge = ({ status, size = "default" }: StatusBadgeProps) => {
 
 // Async version of status badge that fetches status
 const StatusBadgeAsync = ({ nutritionistId, size = "default" }: StatusBadgeAsyncProps) => {
+  // Start with a consistent initial state for server and client
   const [status, setStatus] = useState<AvailabilityStatus>("offline");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false to avoid hydration mismatch
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
+
+  // Use a ref to track if we're on the client side
+  const isMounted = useRef(false);
 
   useEffect(() => {
-    const fetchStatus = async () => {
+    // Mark as mounted on client side
+    isMounted.current = true;
+
+    // Only start loading on the client side after component has mounted
+    if (isMounted.current) {
       setIsLoading(true);
+    }
+
+    let isActive = true;
+    let retryTimeout: NodeJS.Timeout;
+
+    const fetchStatus = async () => {
+      if (!isActive || !isMounted.current) return;
+
       try {
         const currentStatus = await getNutritionistStatus(nutritionistId);
-        setStatus(currentStatus);
+        if (isActive && isMounted.current) {
+          setStatus(currentStatus);
+          setRetryCount(0); // Reset retry count on success
+        }
       } catch (error) {
         console.error("Error fetching nutritionist status:", error);
-        // Default to offline on error
-        setStatus("offline");
+
+        // Handle retry logic
+        if (isActive && isMounted.current && retryCount < maxRetries) {
+          setRetryCount((prev) => prev + 1);
+          // Exponential backoff: 2^retry * 1000ms (2s, 4s, 8s)
+          const retryDelay = Math.pow(2, retryCount) * 1000;
+          console.log(`Retrying in ${retryDelay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+
+          retryTimeout = setTimeout(fetchStatus, retryDelay);
+        } else {
+          // Default to offline after max retries
+          if (isActive && isMounted.current) setStatus("offline");
+        }
       } finally {
-        setIsLoading(false);
+        if (isActive && isMounted.current) setIsLoading(false);
       }
     };
 
-    fetchStatus();
+    // Only fetch on client side after component has mounted
+    if (isMounted.current) {
+      // Small delay to ensure hydration is complete
+      const initialFetchTimeout = setTimeout(fetchStatus, 50);
 
-    // Refresh status every 30 seconds
-    const intervalId = setInterval(fetchStatus, 30000);
+      // Refresh status every 60 seconds
+      const intervalId = setInterval(fetchStatus, 60000);
 
-    return () => clearInterval(intervalId);
-  }, [nutritionistId]);
+      return () => {
+        isActive = false;
+        clearInterval(intervalId);
+        clearTimeout(initialFetchTimeout);
+        if (retryTimeout) clearTimeout(retryTimeout);
+      };
+    }
 
-  if (isLoading) {
+    return () => {
+      isActive = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [nutritionistId, retryCount]);
+
+  // Only show loading spinner if we've mounted on the client
+  if (isLoading && isMounted.current) {
     return (
       <Badge variant="outline" className={size === "sm" ? "text-[10px] px-1.5 py-0" : ""}>
-        <Spinner className="h-3 w-3 mr-1" /> Loading...
+        <span className="inline-block h-3 w-3 mr-1 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        {retryCount > 0 ? `Retry ${retryCount}/${maxRetries}` : "Loading"}
       </Badge>
     );
   }
@@ -155,6 +205,10 @@ export function NutritionistChat({
   userProfile,
   recentMeals,
 }: NutritionistChatProps) {
+  // Use a ref to track if we're on the client side to avoid hydration mismatches
+  const isMounted = useRef(false);
+
+  // Start with consistent initial states for server and client
   const [chatState, setChatState] = useState<ChatState>(initialActiveSession ? "chatting" : "selecting");
   const [nutritionists, setNutritionists] = useState<NutritionistProfile[]>(initialNutritionists);
   const [selectedNutritionist, setSelectedNutritionist] = useState<NutritionistProfile | null>(
@@ -162,15 +216,26 @@ export function NutritionistChat({
   );
   const [activeSessionId, setActiveSessionId] = useState<string | null>(initialActiveSession?.id || null);
   const [messages, setMessages] = useState<MessageType[]>(initialMessages);
-  const [initialQuestion, setInitialQuestion] = useState("");
+  const [initialQuery, setInitialQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
-
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Mark component as mounted on client side
+  useEffect(() => {
+    isMounted.current = true;
+  }, []);
 
   // Load nutritionists and check for active sessions on mount
   useEffect(() => {
+    // Only run on the client side to avoid hydration mismatches
+    if (!isMounted.current) return;
+
     const loadInitialData = async () => {
+      // Skip if we already have data from server-side props
+      if (initialActiveSession && initialMessages.length > 0) {
+        return;
+      }
+
       try {
         setIsLoading(true);
 
@@ -202,37 +267,42 @@ export function NutritionistChat({
         }
       } catch (error) {
         console.error("Error loading initial data:", error);
+        toast.error("Failed to load chat data. Please refresh the page.");
       } finally {
         setIsLoading(false);
       }
     };
 
+    // Run after component has mounted on client
     loadInitialData();
+  }, [userId, initialActiveSession, initialMessages.length]);
 
-    // Set up interval to check for updates every 5 seconds
-    const intervalId = setInterval(() => {
-      const refreshMessages = async () => {
-        if (!activeSessionId) return;
+  // Poll for new messages every 30 seconds when in a chat
+  useEffect(() => {
+    // Only run on the client side
+    if (!isMounted.current) return;
 
+    // Don't poll if we're not in a chat
+    if (chatState !== "chatting" || !activeSessionId) return;
+
+    const intervalId = setInterval(async () => {
+      // Only refresh if we're in a chat and have an active session
+      if (chatState === "chatting" && activeSessionId) {
         try {
           const sessionMessages = await getChatMessages(activeSessionId);
           setMessages(sessionMessages);
         } catch (error) {
           console.error("Error refreshing messages:", error);
         }
-      };
-
-      if (chatState === "chatting" && activeSessionId) {
-        refreshMessages();
       }
-    }, 5000);
+    }, 30000);
 
     return () => clearInterval(intervalId);
   }, [userId, chatState, activeSessionId]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    if (chatContainerRef.current) {
+    if (chatContainerRef.current && isMounted.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
@@ -254,14 +324,29 @@ export function NutritionistChat({
       const responseContent = `Hello! I'm ${nutritionistName}. Thank you for reaching out. How can I help you with your nutrition goals today?`;
 
       // Send the message from the nutritionist
-      const newMessage = await sendMessage(sessionId, responseContent, "nutritionist", nutritionistId);
+      const result = await sendMessage(sessionId, responseContent, "nutritionist", nutritionistId);
 
-      // Add the message to the UI
-      setMessages((prev) => [...prev, newMessage]);
+      // Check if the result is an error object
+      if ("error" in result) {
+        console.error("Error in nutritionist response:", result.error);
+
+        // If the session doesn't exist anymore, reset the chat
+        if (result.error.includes("Chat session not found")) {
+          toast.error("Your chat session has expired. Starting a new session.");
+          setTimeout(() => handleReset(), 2000);
+        } else {
+          toast.error(result.error || "Failed to get response from nutritionist.");
+        }
+        return;
+      }
+
+      // Add the message to the UI if it's a valid message
+      setMessages((prev: MessageType[]) => [...prev, result as MessageType]);
 
       // Scroll to bottom automatically handled by the useEffect
     } catch (error) {
       console.error("Error simulating nutritionist response:", error);
+      toast.error("Failed to get response from nutritionist.");
     } finally {
       setIsLoading(false);
     }
@@ -274,25 +359,38 @@ export function NutritionistChat({
 
   // Handle starting a chat with a nutritionist
   const handleStartChat = async () => {
-    if (!selectedNutritionist) return;
+    if (!selectedNutritionist || !initialQuery.trim()) return;
 
     setIsLoading(true);
 
     try {
-      // Request a chat session using server action
-      const session = await requestChatSession(userId, selectedNutritionist.id, initialQuestion);
+      // Create a direct chat session using the new server action
+      const session = await createDirectChatSession(userId, selectedNutritionist.id, initialQuery);
 
       // Set active session
       setActiveSessionId(session.id);
       setChatState("chatting");
 
-      // Clear initial question
-      setInitialQuestion("");
+      // Clear initial query
+      setInitialQuery("");
 
-      // Simulate a response from the nutritionist
-      await simulateNutritionistResponse(session.id, selectedNutritionist.id);
+      // Fetch the messages to ensure the initial query was properly added
+      const sessionMessages = await getChatMessages(session.id);
+      setMessages(sessionMessages);
+
+      // Add a small delay to ensure the session is fully created
+      setTimeout(async () => {
+        try {
+          // Simulate a response from the nutritionist
+          await simulateNutritionistResponse(session.id, selectedNutritionist.id);
+        } catch (error) {
+          console.error("Error in delayed nutritionist response:", error);
+          toast.error("Failed to get response from nutritionist. Please try again.");
+        }
+      }, 1000);
     } catch (error) {
       console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -315,25 +413,46 @@ export function NutritionistChat({
       }, 3000); // Show ended state for 3 seconds before resetting
     } catch (error) {
       console.error("Error ending chat:", error);
+      toast.error("Failed to end chat. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle sending a message in an active chat
+  // Handle sending a message in the chat
   const handleSendMessage = async (content: string) => {
-    if (!activeSessionId || !selectedNutritionist || !content.trim()) return;
+    if (!activeSessionId || !content.trim() || !selectedNutritionist) return;
 
     setIsLoading(true);
 
     try {
-      // Send the message
-      const newMessage = await sendMessage(activeSessionId, content, "user", userId);
+      // Send the message using server action
+      const result = await sendMessage(activeSessionId, content, "user", userId);
 
-      // Add the message to the UI
-      setMessages((prev) => [...prev, newMessage]);
+      // Check if the result is an error object
+      if ("error" in result) {
+        console.error("Error sending message:", result.error);
+
+        // If the session doesn't exist anymore, reset the chat
+        if (result.error.includes("Chat session not found")) {
+          toast.error("Your chat session has expired. Starting a new session.");
+          setTimeout(() => handleReset(), 2000);
+        } else {
+          toast.error(result.error || "Failed to send message. Please try again.");
+        }
+        return;
+      }
+
+      // If we got a valid message result, add it to the messages array
+      setMessages((prev: MessageType[]) => [...prev, result as MessageType]);
+
+      // Simulate nutritionist response
+      if (selectedNutritionist) {
+        simulateNutritionistResponse(activeSessionId, selectedNutritionist.id);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -343,7 +462,7 @@ export function NutritionistChat({
   const handleReset = () => {
     setChatState("selecting");
     setSelectedNutritionist(null);
-    setInitialQuestion("");
+    setInitialQuery("");
     setMessages([]);
     setActiveSessionId(null);
 
@@ -402,16 +521,16 @@ export function NutritionistChat({
               <div className="mt-6 space-y-4">
                 <h3 className="text-lg font-medium">What would you like to discuss?</h3>
                 <Textarea
-                  value={initialQuestion}
-                  onChange={(e) => setInitialQuestion(e.target.value)}
-                  placeholder="Enter your nutrition question or concern..."
-                  className="min-h-[120px]"
+                  placeholder="Type your nutrition question here..."
+                  value={initialQuery}
+                  onChange={(e) => setInitialQuery(e.target.value)}
+                  className="min-h-[100px]"
                 />
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end mt-2">
                   <Button variant="outline" onClick={handleReset} disabled={isLoading}>
                     Cancel
                   </Button>
-                  <Button onClick={handleStartChat} disabled={isLoading || !initialQuestion.trim()}>
+                  <Button onClick={handleStartChat} disabled={isLoading || !initialQuery.trim()}>
                     {isLoading ? "Starting Chat..." : "Start Chat"}
                   </Button>
                 </div>
