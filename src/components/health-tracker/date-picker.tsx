@@ -90,7 +90,7 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
             showOutsideDays={true}
             fixedWeeks={true}
             components={{
-              Day: ({ date }) => renderDay(date),
+              Day: ({ day }) => renderDay(day.date),
             }}
             className="rounded-md border shadow"
           />

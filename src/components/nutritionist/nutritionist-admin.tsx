@@ -17,6 +17,7 @@ import {
   acceptSessionRequest,
   rejectSessionRequest,
   getNutritionistPendingSessionRequests,
+  getUserNameById,
 } from "@/app/actions/nutritionist-actions";
 import { ChatSession, SessionRequest } from "@/types/nutritionist";
 
@@ -43,6 +44,7 @@ export function NutritionistAdmin({
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
 
   // Store all messages in a map keyed by session ID
   const [allMessages, setAllMessages] = useState<Record<string, MessageType[]>>(initialSessionMessages);
@@ -93,7 +95,7 @@ export function NutritionistAdmin({
     // Set up interval to refresh data
     const intervalId = setInterval(() => {
       loadData();
-    }, 30000); // Refresh every 30 seconds
+    }, 60000); // Refresh every 60 seconds
 
     // Also refresh when the refresh trigger changes
     if (refreshTrigger > 0) {
@@ -117,6 +119,47 @@ export function NutritionistAdmin({
       }
     }
   }, [selectedSession, activeSessions, completedSessions]);
+
+  // Fetch user names for all sessions and requests
+  useEffect(() => {
+    const fetchUserNames = async () => {
+      const allUserIds = new Set<string>();
+
+      // Collect all unique user IDs from sessions and requests
+      [...activeSessions, ...completedSessions].forEach((session) => {
+        if (session.userId && !userNames[session.userId]) {
+          allUserIds.add(session.userId);
+        }
+      });
+
+      pendingRequests.forEach((request) => {
+        if (request.userId && !userNames[request.userId]) {
+          allUserIds.add(request.userId);
+        }
+      });
+
+      // Fetch names for all collected user IDs
+      const newUserNames: Record<string, string> = { ...userNames };
+
+      for (const userId of allUserIds) {
+        try {
+          const name = await getUserNameById(userId);
+          if (name) {
+            newUserNames[userId] = name;
+          }
+        } catch (error) {
+          console.error(`Error fetching name for user ${userId}:`, error);
+        }
+      }
+
+      // Update state with all fetched names
+      if (Object.keys(newUserNames).length > Object.keys(userNames).length) {
+        setUserNames(newUserNames);
+      }
+    };
+
+    fetchUserNames();
+  }, [activeSessions, completedSessions, pendingRequests, userNames]);
 
   // Handle sending a message using the server action
   const handleSendMessage = async (content: string) => {
@@ -207,6 +250,11 @@ export function NutritionistAdmin({
   // Render session list item
   const renderSessionItem = (session: any, isPending = false) => {
     const isSelected = selectedSession === session.id;
+    const userId = session.userId;
+
+    // Use the cached user name or fall back to the userId if not available
+    const displayName = userNames[userId] || session.userName || `User ${userId}`;
+    const nameInitial = displayName.charAt(0) || "U";
 
     return (
       <div
@@ -217,10 +265,10 @@ export function NutritionistAdmin({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarFallback>{session.userName?.charAt(0) || "U"}</AvatarFallback>
+              <AvatarFallback>{nameInitial}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{session.userName || `User ${session.userId}`}</p>
+              <p className="font-medium">{displayName}</p>
               <p className="text-sm text-gray-500">
                 {isPending ? `Request: ${new Date(session.createdAt).toLocaleString()}` : `Started: ${new Date(session.startedAt).toLocaleString()}`}
               </p>
@@ -321,9 +369,13 @@ export function NutritionistAdmin({
               <div className="p-4 border-b flex justify-between items-center">
                 <div>
                   <h3 className="font-medium">
-                    {activeSessions.find((s) => s.id === selectedSession)?.userName ||
-                      completedSessions.find((s) => s.id === selectedSession)?.userName ||
-                      `User ${activeSessions.find((s) => s.id === selectedSession)?.userId || completedSessions.find((s) => s.id === selectedSession)?.userId}`}
+                    {(() => {
+                      const session = activeSessions.find((s) => s.id === selectedSession) || completedSessions.find((s) => s.id === selectedSession);
+                      if (!session) return "Unknown User";
+
+                      const userId = session.userId;
+                      return userNames[userId] || session.userName || `User ${userId}`;
+                    })()}
                   </h3>
                   <p className="text-sm text-gray-500">Session ID: {selectedSession}</p>
                 </div>

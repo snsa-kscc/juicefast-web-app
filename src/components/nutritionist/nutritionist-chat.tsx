@@ -17,15 +17,13 @@ import { toast } from "sonner";
 // Import the new nutritionist actions
 import {
   getNutritionists,
-  getAvailableNutritionists,
-  requestChatSession,
   getUserActiveChatSession,
   getChatMessages,
   sendMessage,
   endChatSession,
   getNutritionistStatus,
   createDirectChatSession,
-} from "@/app/actions/nutritionist";
+} from "@/app/actions/nutritionist-actions";
 
 // Define types
 type ChatState = "selecting" | "waiting" | "chatting" | "ended";
@@ -277,7 +275,7 @@ export function NutritionistChat({
     loadInitialData();
   }, [userId, initialActiveSession, initialMessages.length]);
 
-  // Poll for new messages every 30 seconds when in a chat
+  // Poll for new messages every 60 seconds when in a chat
   useEffect(() => {
     // Only run on the client side
     if (!isMounted.current) return;
@@ -295,7 +293,7 @@ export function NutritionistChat({
           console.error("Error refreshing messages:", error);
         }
       }
-    }, 30000);
+    }, 60000);
 
     return () => clearInterval(intervalId);
   }, [userId, chatState, activeSessionId]);

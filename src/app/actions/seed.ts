@@ -1,6 +1,6 @@
 "use server";
 
-import { createNutritionistProfile } from "./db-actions";
+import { createNutritionistProfile } from "./nutritionist-actions";
 import { NutritionistProfile } from "@/types/nutritionist";
 
 type UserData = {

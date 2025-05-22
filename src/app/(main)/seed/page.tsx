@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createAuthClient } from "better-auth/client";
-import { seedNutritionistData } from "@/app/actions/nutritionist/seed";
+import { seedNutritionistData } from "@/app/actions/seed";
 import { Button } from "@/components/ui/button";
 
 // Initial nutritionist data for seeding with auth info

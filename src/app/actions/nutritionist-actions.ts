@@ -671,6 +671,18 @@ export async function markNotificationAsRead(notificationId: string): Promise<bo
   return true;
 }
 
+// ======== USER OPERATIONS ========
+
+export async function getUserNameById(userId: string): Promise<string | null> {
+  try {
+    const [userRecord] = await db.select().from(user).where(eq(user.id, userId));
+    return userRecord ? userRecord.name : null;
+  } catch (error) {
+    console.error(`Error fetching user name for ${userId}:`, error);
+    return null;
+  }
+}
+
 // ======== ADMIN OPERATIONS ========
 
 export async function isUserAdmin(userId: string): Promise<boolean> {
