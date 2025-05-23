@@ -3,8 +3,8 @@
 import { db } from "@/db";
 import { v4 as uuidv4 } from "uuid";
 import { eq, and, or, desc, asc, isNull } from "drizzle-orm";
-import { nutritionistProfile, chatSession, chatMessage, sessionRequest, chatNotification, user } from "@/db/schema";
-import { NutritionistProfile, ChatSession, ChatNotification, SessionRequest, AvailabilityStatus } from "@/types/nutritionist";
+import { nutritionistProfile, chatSession, chatMessage, chatNotification, user } from "@/db/schema";
+import { NutritionistProfile, ChatSession, ChatNotification, AvailabilityStatus } from "@/types/nutritionist";
 import { MessageType } from "@/components/nutritionist/chat-message";
 import { revalidatePath } from "next/cache";
 
@@ -151,7 +151,7 @@ export async function updateNutritionistProfile(id: string, updates: Partial<Nut
 
 // ======== CHAT SESSION OPERATIONS ========
 
-export async function createChatSession(userId: string, nutritionistId: string, requestId?: string): Promise<ChatSession> {
+export async function createChatSession(userId: string, nutritionistId: string): Promise<ChatSession> {
   const id = uuidv4();
   const now = new Date();
 
@@ -160,11 +160,10 @@ export async function createChatSession(userId: string, nutritionistId: string, 
     userId,
     nutritionistId,
     status: "active",
-    startedAt: now,
-    endedAt: null,
-    endedBy: null,
     createdAt: now,
     updatedAt: now,
+    endedAt: null,
+    endedBy: null,
   });
 
   return {
@@ -196,7 +195,7 @@ export async function getChatSessionById(id: string): Promise<ChatSession | null
       createdAt: session.createdAt,
     };
   } catch (error) {
-    console.error(`Error fetching chat session ${id}:`, error);
+    console.error("Error fetching chat session by ID:", error);
     return null;
   }
 }
@@ -223,7 +222,7 @@ export async function getUserActiveChatSession(userId: string): Promise<ChatSess
       createdAt: session.createdAt,
     };
   } catch (error) {
-    console.error(`Error fetching active chat session for user ${userId}:`, error);
+    console.error("Error fetching user active chat session:", error);
     return null;
   }
 }
@@ -243,7 +242,7 @@ export async function getNutritionistSessions(nutritionistId: string): Promise<C
       createdAt: session.createdAt,
     }));
   } catch (error) {
-    console.error(`Error fetching sessions for nutritionist ${nutritionistId}:`, error);
+    console.error("Error fetching nutritionist sessions:", error);
     return [];
   }
 }
@@ -267,7 +266,7 @@ export async function getNutritionistActiveSessions(nutritionistId: string): Pro
       createdAt: session.createdAt,
     }));
   } catch (error) {
-    console.error(`Error fetching active sessions for nutritionist ${nutritionistId}:`, error);
+    console.error("Error fetching nutritionist active sessions:", error);
     return [];
   }
 }
@@ -288,7 +287,7 @@ export async function updateChatSessionStatus(sessionId: string, status: "active
 
     return true;
   } catch (error) {
-    console.error(`Error updating chat session ${sessionId} status:`, error);
+    console.error("Error updating chat session status:", error);
     return false;
   }
 }
@@ -297,6 +296,7 @@ export async function endChatSession(sessionId: string, endedBy: "user" | "nutri
   // Get the session
   const session = await getChatSessionById(sessionId);
   if (!session || session.status !== "active") {
+    console.error("Invalid session ID or session is not active");
     return false;
   }
 
@@ -360,7 +360,7 @@ export async function getChatMessages(sessionId: string): Promise<MessageType[]>
       timestamp: message.createdAt,
     }));
   } catch (error) {
-    console.error(`Error fetching messages for session ${sessionId}:`, error);
+    console.error("Error fetching chat messages:", error);
     return [];
   }
 }
@@ -371,7 +371,7 @@ export async function markMessageAsRead(messageId: string): Promise<boolean> {
     revalidatePath("/nutritionist");
     return true;
   } catch (error) {
-    console.error(`Error marking message ${messageId} as read:`, error);
+    console.error("Error marking message as read:", error);
     return false;
   }
 }
@@ -385,7 +385,7 @@ export async function sendMessage(
   // Get the session to find the recipient
   const session = await getChatSessionById(sessionId);
   if (!session) {
-    console.error(`Chat session ${sessionId} not found`);
+    console.error("Chat session not found. The session may have expired or been deleted.");
     return { error: `Chat session not found. The session may have expired or been deleted.` };
   }
 
@@ -406,183 +406,6 @@ export async function sendMessage(
 
   revalidatePath("/nutritionist");
   return message;
-}
-
-// ======== SESSION REQUEST OPERATIONS ========
-
-export async function createSessionRequest(userId: string, nutritionistId?: string, initialQuery?: string): Promise<SessionRequest> {
-  const id = uuidv4();
-  const now = new Date();
-
-  await db.insert(sessionRequest).values({
-    id,
-    userId,
-    requestedNutritionistId: nutritionistId || null,
-    initialQuery: initialQuery || null,
-    status: "pending",
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  return {
-    id,
-    userId,
-    requestedNutritionistId: nutritionistId,
-    initialQuery: initialQuery,
-    status: "pending",
-    createdAt: now,
-  };
-}
-
-export async function getSessionRequestById(id: string): Promise<SessionRequest | null> {
-  try {
-    const [request] = await db.select().from(sessionRequest).where(eq(sessionRequest.id, id));
-
-    if (!request) return null;
-
-    return {
-      id: request.id,
-      userId: request.userId,
-      requestedNutritionistId: request.requestedNutritionistId || undefined,
-      initialQuery: request.initialQuery || undefined,
-      status: request.status,
-      createdAt: request.createdAt,
-    };
-  } catch (error) {
-    console.error(`Error fetching session request ${id}:`, error);
-    return null;
-  }
-}
-
-export async function getUserPendingSessionRequests(userId: string): Promise<SessionRequest[]> {
-  try {
-    const requests = await db
-      .select()
-      .from(sessionRequest)
-      .where(and(eq(sessionRequest.userId, userId), eq(sessionRequest.status, "pending")))
-      .orderBy(desc(sessionRequest.createdAt));
-
-    return requests.map((request) => ({
-      id: request.id,
-      userId: request.userId,
-      requestedNutritionistId: request.requestedNutritionistId || undefined,
-      initialQuery: request.initialQuery || undefined,
-      status: request.status,
-      createdAt: request.createdAt,
-    }));
-  } catch (error) {
-    console.error(`Error fetching pending session requests for user ${userId}:`, error);
-    return [];
-  }
-}
-
-export async function getNutritionistPendingSessionRequests(nutritionistId: string): Promise<SessionRequest[]> {
-  try {
-    const requests = await db
-      .select()
-      .from(sessionRequest)
-      .where(and(eq(sessionRequest.requestedNutritionistId, nutritionistId), eq(sessionRequest.status, "pending")))
-      .orderBy(desc(sessionRequest.createdAt));
-
-    return requests.map((request) => ({
-      id: request.id,
-      userId: request.userId,
-      requestedNutritionistId: request.requestedNutritionistId || undefined,
-      initialQuery: request.initialQuery || undefined,
-      status: request.status,
-      createdAt: request.createdAt,
-    }));
-  } catch (error) {
-    console.error(`Error fetching pending session requests for nutritionist ${nutritionistId}:`, error);
-    return [];
-  }
-}
-
-export async function updateSessionRequestStatus(requestId: string, status: "pending" | "active" | "ended"): Promise<boolean> {
-  try {
-    await db
-      .update(sessionRequest)
-      .set({
-        status,
-        updatedAt: new Date(),
-      })
-      .where(eq(sessionRequest.id, requestId));
-
-    return true;
-  } catch (error) {
-    console.error(`Error updating session request ${requestId} status:`, error);
-    return false;
-  }
-}
-
-export async function requestChatSession(userId: string, nutritionistId: string, initialQuery?: string): Promise<SessionRequest> {
-  const request = await createSessionRequest(userId, nutritionistId, initialQuery);
-
-  // Create notification for nutritionist
-  await createNotification({
-    recipientId: nutritionistId,
-    recipientType: "nutritionist",
-    type: "session_request",
-    content: `New chat request from a user`,
-    relatedEntityId: request.id,
-  });
-
-  revalidatePath("/nutritionist");
-  return request;
-}
-
-export async function acceptSessionRequest(requestId: string, nutritionistId: string): Promise<ChatSession | null> {
-  // Get the request
-  const request = await getSessionRequestById(requestId);
-  if (!request || request.status !== "pending") {
-    return null;
-  }
-
-  // Update request status
-  await updateSessionRequestStatus(requestId, "active");
-
-  // Create chat session
-  const session = await createChatSession(request.userId, nutritionistId, requestId);
-
-  // Create notification for user
-  await createNotification({
-    recipientId: request.userId,
-    recipientType: "user",
-    type: "session_accepted",
-    content: `Your chat request has been accepted.`,
-    relatedEntityId: session.id,
-  });
-
-  // If there was an initial query, add it as the first message
-  if (request.initialQuery) {
-    await createChatMessage(session.id, request.initialQuery, "user", request.userId);
-  }
-
-  revalidatePath("/nutritionist");
-  return session;
-}
-
-export async function rejectSessionRequest(requestId: string, nutritionistId: string): Promise<boolean> {
-  // Get the request
-  const request = await getSessionRequestById(requestId);
-  if (!request || request.status !== "pending") {
-    return false;
-  }
-
-  // Update request status
-  await updateSessionRequestStatus(requestId, "ended");
-
-  // Create notification for user
-  await createNotification({
-    recipientId: request.userId,
-    recipientType: "user",
-    type: "session_rejected",
-    content: `Your chat request has been rejected. Please try again later.`,
-    relatedEntityId: requestId,
-  });
-
-  revalidatePath("/nutritionist");
-  return true;
 }
 
 // ======== NOTIFICATION OPERATIONS ========

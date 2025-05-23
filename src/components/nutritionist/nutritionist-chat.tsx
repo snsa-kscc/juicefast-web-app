@@ -305,158 +305,89 @@ export function NutritionistChat({
     }
   }, [messages]);
 
-  // Simulate a response from the nutritionist
-  const simulateNutritionistResponse = async (sessionId: string, nutritionistId: string) => {
-    if (!selectedNutritionist) return;
-
-    setIsLoading(true);
-
-    // Delay to simulate typing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    try {
-      // Get the nutritionist's name
-      const nutritionistName = selectedNutritionist.name;
-
-      // Create a response message
-      const responseContent = `Hello! I'm ${nutritionistName}. Thank you for reaching out. How can I help you with your nutrition goals today?`;
-
-      // Send the message from the nutritionist
-      const result = await sendMessage(sessionId, responseContent, "nutritionist", nutritionistId);
-
-      // Check if the result is an error object
-      if ("error" in result) {
-        console.error("Error in nutritionist response:", result.error);
-
-        // If the session doesn't exist anymore, reset the chat
-        if (result.error.includes("Chat session not found")) {
-          toast.error("Your chat session has expired. Starting a new session.");
-          setTimeout(() => handleReset(), 2000);
-        } else {
-          toast.error(result.error || "Failed to get response from nutritionist.");
-        }
-        return;
-      }
-
-      // Add the message to the UI if it's a valid message
-      setMessages((prev: MessageType[]) => [...prev, result as MessageType]);
-
-      // Scroll to bottom automatically handled by the useEffect
-    } catch (error) {
-      console.error("Error simulating nutritionist response:", error);
-      toast.error("Failed to get response from nutritionist.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle selecting a nutritionist to chat with
   const handleSelectNutritionist = (nutritionist: NutritionistProfile) => {
     setSelectedNutritionist(nutritionist);
   };
 
-  // Handle starting a chat with a nutritionist
   const handleStartChat = async () => {
-    if (!selectedNutritionist || !initialQuery.trim()) return;
+    if (!selectedNutritionist) return;
 
     setIsLoading(true);
+    setChatState("waiting");
 
     try {
-      // Create a direct chat session using the new server action
-      const session = await createDirectChatSession(userId, selectedNutritionist.id, initialQuery);
+      // Use the initialQuery state variable directly
+      const query = initialQuery.trim();
 
-      // Set active session
+      const session = await createDirectChatSession(userId, selectedNutritionist.id, query);
+
       setActiveSessionId(session.id);
       setChatState("chatting");
 
-      // Clear initial query
       setInitialQuery("");
 
-      // Fetch the messages to ensure the initial query was properly added
       const sessionMessages = await getChatMessages(session.id);
       setMessages(sessionMessages);
-
-      // Add a small delay to ensure the session is fully created
-      setTimeout(async () => {
-        try {
-          // Simulate a response from the nutritionist
-          await simulateNutritionistResponse(session.id, selectedNutritionist.id);
-        } catch (error) {
-          console.error("Error in delayed nutritionist response:", error);
-          toast.error("Failed to get response from nutritionist. Please try again.");
-        }
-      }, 1000);
     } catch (error) {
-      console.error("Error starting chat:", error);
-      toast.error("Failed to start chat. Please try again.");
+      toast.error("Could not start chat session. Please try again.");
+      setChatState("selecting");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle ending a chat session
+  const handleSendMessage = async (content: string) => {
+    if (!activeSessionId || !content.trim() || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const result = await sendMessage(activeSessionId, content, "user", userId);
+
+      if ("error" in result) {
+        toast.error("Could not send message: " + result.error);
+        return;
+      }
+
+      setMessages((prev) => [...prev, result as MessageType]);
+
+      if (chatContainerRef.current) {
+        setTimeout(() => {
+          if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+              top: chatContainerRef.current.scrollHeight,
+              behavior: "smooth",
+            });
+          }
+        }, 100);
+      }
+    } catch (error) {
+      toast.error("An error occurred while sending your message");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleEndChat = async () => {
     if (!activeSessionId) return;
 
     setIsLoading(true);
 
     try {
-      // End the chat session using server action
       await endChatSession(activeSessionId, "user");
 
-      // Reset state
       setChatState("ended");
+
       setTimeout(() => {
         handleReset();
-      }, 3000); // Show ended state for 3 seconds before resetting
+      }, 3000);
     } catch (error) {
-      console.error("Error ending chat:", error);
       toast.error("Failed to end chat. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle sending a message in the chat
-  const handleSendMessage = async (content: string) => {
-    if (!activeSessionId || !content.trim() || !selectedNutritionist) return;
-
-    setIsLoading(true);
-
-    try {
-      // Send the message using server action
-      const result = await sendMessage(activeSessionId, content, "user", userId);
-
-      // Check if the result is an error object
-      if ("error" in result) {
-        console.error("Error sending message:", result.error);
-
-        // If the session doesn't exist anymore, reset the chat
-        if (result.error.includes("Chat session not found")) {
-          toast.error("Your chat session has expired. Starting a new session.");
-          setTimeout(() => handleReset(), 2000);
-        } else {
-          toast.error(result.error || "Failed to send message. Please try again.");
-        }
-        return;
-      }
-
-      // If we got a valid message result, add it to the messages array
-      setMessages((prev: MessageType[]) => [...prev, result as MessageType]);
-
-      // Simulate nutritionist response
-      if (selectedNutritionist) {
-        simulateNutritionistResponse(activeSessionId, selectedNutritionist.id);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Reset to browsing state
   const handleReset = () => {
     setChatState("selecting");
     setSelectedNutritionist(null);

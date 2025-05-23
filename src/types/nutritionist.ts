@@ -41,29 +41,15 @@ export interface ChatNotification {
   recipientId: string;
   recipientType: 'user' | 'nutritionist';
   sessionId?: string;
-  requestId?: string;
-  type: 'new_message' | 'session_request' | 'session_accepted' | 'session_rejected' | 'session_ended' | 'nutritionist_available';
+  type: 'new_message' | 'session_ended';
   read: boolean;
   createdAt: Date;
   message: string;
   content?: string; // Alternative to message for flexibility
-  relatedEntityId?: string | null; // Generic reference to related entity (session or request)
+  relatedEntityId?: string | null; // Generic reference to related entity
 }
 
 // Status of a nutritionist's availability
 export type AvailabilityStatus = 'online' | 'busy' | 'away' | 'offline';
 
-// Request for a chat session
-export interface SessionRequest {
-  id: string;
-  userId: string;
-  requestedNutritionistId?: string; // Optional - if user requests specific nutritionist
-  initialQuery?: string; // Initial question/concern from user
-  status: 'pending' | 'active' | 'ended' | 'rejected' | 'expired';
-  createdAt: Date;
-  expiresAt?: Date; // When the request expires if not accepted
-  acceptedAt?: Date;
-  rejectedAt?: Date;
-  // Additional fields for UI display
-  userName?: string;
-}
+// Session request interface removed

@@ -55,7 +55,7 @@ export const verification = pgTable("jf-verification", {
 export const sessionStatusEnum = pgEnum("jf-session_status", ["pending", "active", "ended"]);
 export const availabilityStatusEnum = pgEnum("jf-availability_status", ["online", "busy", "away", "offline"]);
 export const senderTypeEnum = pgEnum("jf-sender_type", ["user", "nutritionist"]);
-export const notificationTypeEnum = pgEnum("jf-notification_type", ["new_message", "session_request", "session_accepted", "session_rejected", "session_ended"]);
+export const notificationTypeEnum = pgEnum("jf-notification_type", ["new_message", "session_ended"]);
 
 // Nutritionist tables
 export const nutritionistProfile = pgTable("jf-nutritionist_profile", {
@@ -104,24 +104,13 @@ export const chatMessage = pgTable("jf-chat_message", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const sessionRequest = pgTable("jf-session_request", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  requestedNutritionistId: text("requested_nutritionist_id").references(() => nutritionistProfile.id),
-  initialQuery: text("initial_query"),
-  status: sessionStatusEnum("status").notNull().default("pending"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+// Session request table removed
 
 export const chatNotification = pgTable("jf-chat_notification", {
   id: text("id").primaryKey(),
   recipientId: text("recipient_id").notNull(),
   recipientType: senderTypeEnum("recipient_type").notNull(),
   sessionId: text("session_id").references(() => chatSession.id, { onDelete: "cascade" }),
-  requestId: text("request_id").references(() => sessionRequest.id, { onDelete: "cascade" }),
   type: notificationTypeEnum("type").notNull(),
   message: text("message").notNull(),
   read: boolean("read").default(false),

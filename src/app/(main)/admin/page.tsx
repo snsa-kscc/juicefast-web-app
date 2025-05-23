@@ -1,11 +1,5 @@
 import { redirect } from "next/navigation";
-import {
-  isUserAdmin,
-  getNutritionistActiveSessions,
-  getChatMessages,
-  getNutritionistPendingSessionRequests,
-  getNutritionistByUserId,
-} from "@/app/actions/nutritionist-actions";
+import { isUserAdmin, getNutritionistActiveSessions, getChatMessages, getNutritionistByUserId } from "@/app/actions/nutritionist-actions";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { NutritionistAdmin } from "@/components/nutritionist/nutritionist-admin";
@@ -31,7 +25,6 @@ export default async function AdminPage() {
 
   // Fetch all required data server-side
   const activeSessions = await getNutritionistActiveSessions(nutritionist?.id ?? "");
-  const pendingRequests = await getNutritionistPendingSessionRequests(nutritionist?.id ?? "");
 
   // For completed sessions, filter from active sessions
   const completedSessions = activeSessions.filter((s: ChatSession) => s.status === "ended");
@@ -57,7 +50,6 @@ export default async function AdminPage() {
       <NutritionistAdmin
         nutritionistId={nutritionist?.id ?? ""}
         initialActiveSessions={activeSessionsList}
-        initialPendingRequests={pendingRequests}
         initialCompletedSessions={completedSessions}
         initialSessionMessages={allSessionMessages}
       />

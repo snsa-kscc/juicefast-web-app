@@ -9,37 +9,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChatInput } from "./chat-input";
 import { ChatMessage, MessageType } from "./chat-message";
-import {
-  getNutritionistActiveSessions,
-  getChatMessages,
-  sendMessage,
-  endChatSession,
-  acceptSessionRequest,
-  rejectSessionRequest,
-  getNutritionistPendingSessionRequests,
-  getUserNameById,
-} from "@/app/actions/nutritionist-actions";
-import { ChatSession, SessionRequest } from "@/types/nutritionist";
+import { getNutritionistActiveSessions, getChatMessages, sendMessage, endChatSession, getUserNameById } from "@/app/actions/nutritionist-actions";
+import { ChatSession } from "@/types/nutritionist";
 
 interface NutritionistAdminProps {
   nutritionistId: string;
   initialActiveSessions: ChatSession[];
-  initialPendingRequests: SessionRequest[];
   initialCompletedSessions: ChatSession[];
   initialSessionMessages: Record<string, MessageType[]>;
 }
 
-export function NutritionistAdmin({
-  nutritionistId,
-  initialActiveSessions,
-  initialPendingRequests,
-  initialCompletedSessions,
-  initialSessionMessages,
-}: NutritionistAdminProps) {
+export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initialCompletedSessions, initialSessionMessages }: NutritionistAdminProps) {
   // State for admin UI
   const [activeTab, setActiveTab] = useState("active");
   const [activeSessions, setActiveSessions] = useState<ChatSession[]>(initialActiveSessions);
-  const [pendingRequests, setPendingRequests] = useState<SessionRequest[]>(initialPendingRequests);
   const [completedSessions, setCompletedSessions] = useState<ChatSession[]>(initialCompletedSessions);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,10 +46,6 @@ export function NutritionistAdmin({
         // For completed sessions, we need to get all sessions and filter
         setCompletedSessions(activeSessions.filter((s: ChatSession) => s.status === "ended"));
 
-        // Get pending requests
-        const pendingRequests = await getNutritionistPendingSessionRequests(nutritionistId);
-        setPendingRequests(pendingRequests);
-
         // Load messages for all active sessions
         const updatedMessages = { ...allMessages };
         let hasNewMessages = false;
@@ -77,7 +56,6 @@ export function NutritionistAdmin({
             if (JSON.stringify(sessionMessages) !== JSON.stringify(updatedMessages[session.id] || [])) {
               updatedMessages[session.id] = sessionMessages;
               hasNewMessages = true;
-              console.log(`Updated ${sessionMessages.length} messages for session ${session.id}`);
             }
           } catch (error) {
             console.error(`Error fetching messages for session ${session.id}:`, error);
@@ -88,7 +66,7 @@ export function NutritionistAdmin({
           setAllMessages(updatedMessages);
         }
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.error(`Error fetching active sessions for nutritionist ${nutritionistId}:`, error);
       }
     };
 
@@ -102,64 +80,51 @@ export function NutritionistAdmin({
       loadData();
     }
 
+    // Clean up interval on unmount
     return () => clearInterval(intervalId);
   }, [nutritionistId, refreshTrigger, allMessages]);
 
-  // Update active tab when selected session changes
-  useEffect(() => {
-    if (selectedSession) {
-      // If we have a selected session, make sure we're on the active tab
-      const isInActiveSessions = activeSessions.some((s) => s.id === selectedSession);
-      const isInCompletedSessions = completedSessions.some((s) => s.id === selectedSession);
-
-      if (isInActiveSessions) {
-        setActiveTab("active");
-      } else if (isInCompletedSessions) {
-        setActiveTab("completed");
-      }
-    }
-  }, [selectedSession, activeSessions, completedSessions]);
-
-  // Fetch user names for all sessions and requests
+  // Fetch user names for all sessions
   useEffect(() => {
     const fetchUserNames = async () => {
-      const allUserIds = new Set<string>();
-
-      // Collect all unique user IDs from sessions and requests
+      // Collect all user IDs from active and completed sessions
+      const userIds = new Set<string>();
       [...activeSessions, ...completedSessions].forEach((session) => {
-        if (session.userId && !userNames[session.userId]) {
-          allUserIds.add(session.userId);
+        if (session.userId) {
+          userIds.add(session.userId);
         }
       });
 
-      pendingRequests.forEach((request) => {
-        if (request.userId && !userNames[request.userId]) {
-          allUserIds.add(request.userId);
-        }
-      });
+      // Skip if we already have all the names
+      if (Array.from(userIds).every((id) => userNames[id])) {
+        return;
+      }
 
-      // Fetch names for all collected user IDs
-      const newUserNames: Record<string, string> = { ...userNames };
+      // Fetch names for all user IDs
+      const newUserNames = { ...userNames };
+      let hasNewNames = false;
 
-      for (const userId of allUserIds) {
-        try {
-          const name = await getUserNameById(userId);
-          if (name) {
-            newUserNames[userId] = name;
+      for (const userId of userIds) {
+        if (!newUserNames[userId]) {
+          try {
+            const name = await getUserNameById(userId);
+            if (name) {
+              newUserNames[userId] = name;
+              hasNewNames = true;
+            }
+          } catch (error) {
+            console.error(`Error fetching user name for ID ${userId}:`, error);
           }
-        } catch (error) {
-          console.error(`Error fetching name for user ${userId}:`, error);
         }
       }
 
-      // Update state with all fetched names
-      if (Object.keys(newUserNames).length > Object.keys(userNames).length) {
+      if (hasNewNames) {
         setUserNames(newUserNames);
       }
     };
 
     fetchUserNames();
-  }, [activeSessions, completedSessions, pendingRequests, userNames]);
+  }, [activeSessions, completedSessions, userNames]);
 
   // Handle sending a message using the server action
   const handleSendMessage = async (content: string) => {
@@ -168,21 +133,19 @@ export function NutritionistAdmin({
     setIsLoading(true);
 
     try {
-      // Use the server action directly
       const result = await sendMessage(selectedSession, content, "nutritionist", nutritionistId);
 
       if ("error" in result) {
-        console.error("Error sending message:", result.error);
         return;
       }
 
-      // Add the new message to the existing messages for this session
+      // Update messages in the UI
       setAllMessages((prevMessages) => ({
         ...prevMessages,
         [selectedSession]: [...(prevMessages[selectedSession] || []), result],
       }));
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error(`Error sending message for session ${selectedSession}:`, error);
     } finally {
       setIsLoading(false);
     }
@@ -194,40 +157,11 @@ export function NutritionistAdmin({
 
     try {
       await endChatSession(selectedSession, "nutritionist");
-
-      // Update local state
       setRefreshTrigger((prev) => prev + 1);
       setSelectedSession(null);
       // No need to clear messages as they're derived from selectedSession now
     } catch (error) {
-      console.error("Error ending session:", error);
-    }
-  };
-
-  // Handle accepting a chat request
-  const handleAcceptRequest = async (requestId: string) => {
-    try {
-      const session = await acceptSessionRequest(requestId, nutritionistId);
-      if (session) {
-        // Update local state
-        setRefreshTrigger((prev) => prev + 1);
-        setActiveTab("active"); // Switch to active tab
-
-        // Select the new session
-        await handleSelectSession(session.id);
-      }
-    } catch (error) {
-      console.error("Error accepting request:", error);
-    }
-  };
-
-  // Handle rejecting a chat request
-  const handleRejectRequest = async (requestId: string) => {
-    try {
-      await rejectSessionRequest(requestId, nutritionistId);
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error rejecting request:", error);
+      console.error(`Error ending session ${selectedSession}:`, error);
     }
   };
 
@@ -239,72 +173,42 @@ export function NutritionistAdmin({
       return;
     }
 
-    console.log("Selecting session:", sessionId);
-    console.log("Current messages for this session:", allMessages[sessionId] || []);
     setSelectedSession(sessionId);
-
-    // No need to fetch messages here as they're already loaded in initialSessionMessages
-    // and are periodically refreshed by the useEffect
   };
 
   // Render session list item
-  const renderSessionItem = (session: any, isPending = false) => {
-    const isSelected = selectedSession === session.id;
-    const userId = session.userId;
-
-    // Use the cached user name or fall back to the userId if not available
-    const displayName = userNames[userId] || session.userName || `User ${userId}`;
-    const nameInitial = displayName.charAt(0) || "U";
+  const renderSessionItem = (session: ChatSession) => {
+    const isActive = session.id === selectedSession;
+    const userName = userNames[session.userId] || `User ${session.userId.substring(0, 8)}`;
 
     return (
       <div
         key={session.id}
-        className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${isSelected ? "bg-gray-100" : ""}`}
-        onClick={() => !isPending && handleSelectSession(session.id)}
+        className={`p-3 border-b cursor-pointer ${isActive ? "bg-accent" : "hover:bg-muted"}`}
+        onClick={() => handleSelectSession(session.id)}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback>{nameInitial}</AvatarFallback>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>{userName.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{displayName}</p>
-              <p className="text-sm text-gray-500">
-                {isPending ? `Request: ${new Date(session.createdAt).toLocaleString()}` : `Started: ${new Date(session.startedAt).toLocaleString()}`}
-              </p>
+              <h4 className="font-medium">{userName}</h4>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">{new Date(session.createdAt).toLocaleString()}</span>
+                {session.status === "active" ? (
+                  <Badge variant="success" className="text-[10px] px-1 py-0">
+                    Active
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                    Ended
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
-
-          {isPending && (
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRejectRequest(session.id);
-                }}
-              >
-                Decline
-              </Button>
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAcceptRequest(session.id);
-                }}
-              >
-                Accept
-              </Button>
-            </div>
-          )}
-
-          {!isPending && session.status === "active" && <Badge variant="success">Active</Badge>}
-
-          {!isPending && session.status === "ended" && <Badge variant="secondary">Completed</Badge>}
         </div>
-
-        {!isPending && <p className="text-sm mt-1 line-clamp-1">{session.initialQuery || "No initial query"}</p>}
       </div>
     );
   };
@@ -313,7 +217,7 @@ export function NutritionistAdmin({
     <Card className="w-full h-full flex flex-col">
       <CardHeader>
         <CardTitle>Nutritionist Dashboard</CardTitle>
-        <CardDescription>Manage your client conversations and requests</CardDescription>
+        <CardDescription>Manage your client conversations</CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 p-0 flex overflow-hidden">
@@ -321,16 +225,9 @@ export function NutritionistAdmin({
         <div className="w-1/3 border-r flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="px-4 pt-2">
-              <TabsList className="w-full">
-                <TabsTrigger value="active" className="flex-1">
-                  Active ({activeSessions.length})
-                </TabsTrigger>
-                <TabsTrigger value="pending" className="flex-1">
-                  Requests ({pendingRequests.length})
-                </TabsTrigger>
-                <TabsTrigger value="completed" className="flex-1">
-                  Completed
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="active">Active ({activeSessions.length})</TabsTrigger>
+                <TabsTrigger value="completed">Completed ({completedSessions.length})</TabsTrigger>
               </TabsList>
             </div>
 
@@ -340,14 +237,6 @@ export function NutritionistAdmin({
                   <div className="p-4 text-center text-gray-500">No active sessions</div>
                 ) : (
                   activeSessions.map((session) => renderSessionItem(session))
-                )}
-              </TabsContent>
-
-              <TabsContent value="pending" className="m-0">
-                {pendingRequests.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">No pending requests</div>
-                ) : (
-                  pendingRequests.map((request) => renderSessionItem(request, true))
                 )}
               </TabsContent>
 
@@ -362,19 +251,18 @@ export function NutritionistAdmin({
           </Tabs>
         </div>
 
-        {/* Right side with chat */}
-        <div className="w-2/3 flex flex-col">
+        {/* Right side with chat messages */}
+        <div className="flex-1 flex flex-col">
           {selectedSession ? (
             <>
-              <div className="p-4 border-b flex justify-between items-center">
+              <div className="flex justify-between items-center p-4 border-b">
                 <div>
                   <h3 className="font-medium">
                     {(() => {
-                      const session = activeSessions.find((s) => s.id === selectedSession) || completedSessions.find((s) => s.id === selectedSession);
+                      const session = [...activeSessions, ...completedSessions].find((s) => s.id === selectedSession);
                       if (!session) return "Unknown User";
-
                       const userId = session.userId;
-                      return userNames[userId] || session.userName || `User ${userId}`;
+                      return userNames[userId] || `User ${userId.substring(0, 8)}`;
                     })()}
                   </h3>
                   <p className="text-sm text-gray-500">Session ID: {selectedSession}</p>
@@ -392,62 +280,6 @@ export function NutritionistAdmin({
                   <div className="text-center text-gray-500 py-8">
                     <p>No messages yet</p>
                     <p className="text-xs mt-2">Session ID: {selectedSession}</p>
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => {
-                          console.log("Current messages state:", messages);
-                          console.log("Refreshing messages for session:", selectedSession);
-                          if (selectedSession) {
-                            getChatMessages(selectedSession).then((msgs) => {
-                              console.log("Refreshed messages:", msgs);
-                              setAllMessages((prev) => ({
-                                ...prev,
-                                [selectedSession]: msgs,
-                              }));
-                            });
-                          }
-                        }}
-                        className="text-blue-500 underline text-xs"
-                      >
-                        Debug: Refresh Messages
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          if (selectedSession) {
-                            // Create a test message to see if rendering works
-                            const testMessage = {
-                              id: `test-${Date.now()}`,
-                              sessionId: selectedSession,
-                              content: `Test message created at ${new Date().toLocaleTimeString()}`,
-                              sender: "nutritionist" as const,
-                              senderId: nutritionistId,
-                              timestamp: new Date(),
-                              read: false,
-                            };
-                            console.log("Adding test message:", testMessage);
-
-                            // Update the allMessages state with the test message
-                            setAllMessages((prev) => ({
-                              ...prev,
-                              [selectedSession]: [...(prev[selectedSession] || []), testMessage],
-                            }));
-
-                            // Also try sending a real message to the database
-                            sendMessage(selectedSession, `Test message sent at ${new Date().toLocaleTimeString()}`, "nutritionist", nutritionistId)
-                              .then((result) => {
-                                console.log("Send message result:", result);
-                              })
-                              .catch((err) => {
-                                console.error("Error sending test message:", err);
-                              });
-                          }
-                        }}
-                        className="text-blue-500 underline text-xs"
-                      >
-                        Debug: Add Test Message
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <>

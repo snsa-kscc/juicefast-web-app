@@ -22,6 +22,13 @@
       "when": 1747849857129,
       "tag": "0002_sweet_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747927472608,
+      "tag": "0003_watery_ezekiel",
+      "breakpoints": true
     }
   ]
 }
