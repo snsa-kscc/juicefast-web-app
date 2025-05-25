@@ -53,7 +53,6 @@ export const verification = pgTable("jf-verification", {
 
 // Nutritionist chat enums
 export const sessionStatusEnum = pgEnum("jf-session_status", ["pending", "active", "ended"]);
-export const availabilityStatusEnum = pgEnum("jf-availability_status", ["online", "busy", "away", "offline"]);
 export const senderTypeEnum = pgEnum("jf-sender_type", ["user", "nutritionist"]);
 export const notificationTypeEnum = pgEnum("jf-notification_type", ["new_message", "session_ended"]);
 
@@ -103,8 +102,6 @@ export const chatMessage = pgTable("jf-chat_message", {
   read: boolean("read").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
-
-// Session request table removed
 
 export const chatNotification = pgTable("jf-chat_notification", {
   id: text("id").primaryKey(),

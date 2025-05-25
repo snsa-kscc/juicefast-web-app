@@ -1,0 +1,1 @@
+DROP TYPE "public"."jf-availability_status";

@@ -30,11 +30,11 @@ export default async function AdminPage() {
   const completedSessions = activeSessions.filter((s: ChatSession) => s.status === "ended");
   const activeSessionsList = activeSessions.filter((s: ChatSession) => s.status !== "ended");
 
-  // Pre-fetch messages for all active sessions
+  // Pre-fetch messages for all sessions (both active and completed)
   const allSessionMessages: Record<string, MessageType[]> = {};
 
-  // Only fetch messages for active sessions to keep it simple
-  for (const session of activeSessionsList) {
+  // Fetch messages for ALL sessions, including completed ones
+  for (const session of [...activeSessionsList, ...completedSessions]) {
     try {
       const messages = await getChatMessages(session.id);
       allSessionMessages[session.id] = messages;

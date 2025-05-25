@@ -2,20 +2,18 @@
 
 export interface NutritionistProfile {
   id: string;
-  userId?: string; // Reference to the user who is a nutritionist
+  userId: string; // Reference to the user who is a nutritionist
   name: string;
   email: string;
   specialties: string[];
   bio: string;
   photoUrl?: string;
-  availability: {
-    available: boolean;
-    nextAvailableSlot?: Date;
-    workingHours?: {
-      [day: string]: {
-        start: string; // Format: "HH:MM"
-        end: string;   // Format: "HH:MM"
-      };
+  available: boolean;
+  nextAvailableSlot?: Date;
+  workingHours?: {
+    [day: string]: {
+      start: string; // Format: "HH:MM"
+      end: string;   // Format: "HH:MM"
     };
   };
   averageResponseTime?: number; // in minutes

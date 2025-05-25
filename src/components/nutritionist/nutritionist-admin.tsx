@@ -39,18 +39,22 @@ export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initi
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get active sessions for this nutritionist
-        const activeSessions = await getNutritionistActiveSessions(nutritionistId);
-        setActiveSessions(activeSessions.filter((s: ChatSession) => s.status !== "ended"));
+        // Get all sessions for this nutritionist
+        const allSessionsData = await getNutritionistActiveSessions(nutritionistId);
+        
+        // Separate active and completed sessions
+        const activeSessionsData = allSessionsData.filter((s: ChatSession) => s.status !== "ended");
+        const completedSessionsData = allSessionsData.filter((s: ChatSession) => s.status === "ended");
+        
+        setActiveSessions(activeSessionsData);
+        setCompletedSessions(completedSessionsData);
 
-        // For completed sessions, we need to get all sessions and filter
-        setCompletedSessions(activeSessions.filter((s: ChatSession) => s.status === "ended"));
-
-        // Load messages for all active sessions
+        // Load messages for ALL sessions (both active and completed)
         const updatedMessages = { ...allMessages };
         let hasNewMessages = false;
 
-        for (const session of activeSessions.filter((s: ChatSession) => s.status !== "ended")) {
+        // Process all sessions, not just active ones
+        for (const session of allSessionsData) {
           try {
             const sessionMessages = await getChatMessages(session.id);
             if (JSON.stringify(sessionMessages) !== JSON.stringify(updatedMessages[session.id] || [])) {
@@ -66,7 +70,7 @@ export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initi
           setAllMessages(updatedMessages);
         }
       } catch (error) {
-        console.error(`Error fetching active sessions for nutritionist ${nutritionistId}:`, error);
+        console.error(`Error fetching sessions for nutritionist ${nutritionistId}:`, error);
       }
     };
 

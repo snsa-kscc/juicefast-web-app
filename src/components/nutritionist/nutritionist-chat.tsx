@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { NutritionistProfile, AvailabilityStatus, ChatSession, SessionRequest } from "@/types/nutritionist";
+import { NutritionistProfile, AvailabilityStatus, ChatSession } from "@/types/nutritionist";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, Clock } from "lucide-react";

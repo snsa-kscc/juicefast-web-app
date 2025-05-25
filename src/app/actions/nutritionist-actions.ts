@@ -18,11 +18,9 @@ const mapDbProfileToNutritionistProfile = (profile: any): NutritionistProfile =>
     specialties: profile.specialties,
     bio: profile.bio,
     photoUrl: profile.photoUrl || null,
-    availability: {
-      available: profile.available,
-      nextAvailableSlot: profile.nextAvailableSlot,
-      workingHours: profile.workingHours,
-    },
+    available: profile.available,
+    nextAvailableSlot: profile.nextAvailableSlot,
+    workingHours: profile.workingHours,
     averageResponseTime: profile.averageResponseTime,
   };
 };
@@ -108,10 +106,10 @@ export async function createNutritionistProfile(profile: Omit<NutritionistProfil
     bio: profile.bio,
     specialties: profile.specialties,
     photoUrl: profile.photoUrl || null,
-    available: profile.availability?.available || false,
-    nextAvailableSlot: profile.availability?.nextAvailableSlot || null,
-    workingHours: profile.availability?.workingHours || null,
-    averageResponseTime: 0, // Default value
+    available: profile.available || true,
+    nextAvailableSlot: profile.nextAvailableSlot || null,
+    workingHours: profile.workingHours || null,
+    averageResponseTime: profile.averageResponseTime || null,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -120,33 +118,37 @@ export async function createNutritionistProfile(profile: Omit<NutritionistProfil
 }
 
 export async function updateNutritionistProfile(id: string, updates: Partial<NutritionistProfile>): Promise<NutritionistProfile | undefined> {
-  const updateValues: any = {
-    updatedAt: new Date(),
-  };
+  try {
+    // Prepare the update object
+    const updateData: any = {};
 
-  // Map updates to database fields
-  if (updates.name) updateValues.name = updates.name;
-  if (updates.email) updateValues.email = updates.email;
-  if (updates.bio) updateValues.bio = updates.bio;
-  if (updates.specialties) updateValues.specialties = updates.specialties;
-  if (updates.photoUrl !== undefined) updateValues.photoUrl = updates.photoUrl;
-  if (updates.availability) {
-    if (updates.availability.available !== undefined) {
-      updateValues.available = updates.availability.available;
+    // Only include fields that are present in updates
+    if (updates.name) updateData.name = updates.name;
+    if (updates.email) updateData.email = updates.email;
+    if (updates.bio) updateData.bio = updates.bio;
+    if (updates.specialties) updateData.specialties = updates.specialties;
+    if (updates.photoUrl !== undefined) updateData.photoUrl = updates.photoUrl;
+    
+    // Handle availability updates
+    if (updates.available !== undefined) {
+      updateData.available = updates.available;
     }
-    if (updates.availability.nextAvailableSlot !== undefined) {
-      updateValues.nextAvailableSlot = updates.availability.nextAvailableSlot;
+    if (updates.nextAvailableSlot !== undefined) {
+      updateData.nextAvailableSlot = updates.nextAvailableSlot;
     }
-    if (updates.availability.workingHours !== undefined) {
-      updateValues.workingHours = updates.availability.workingHours;
+    if (updates.workingHours !== undefined) {
+      updateData.workingHours = updates.workingHours;
     }
+
+    await db.update(nutritionistProfile).set({ ...updateData, updatedAt: new Date() }).where(eq(nutritionistProfile.id, id));
+
+    const result = await getNutritionistById(id);
+    revalidatePath("/nutritionist");
+    return result;
+  } catch (error) {
+    console.error(`Error updating nutritionist profile ${id}:`, error);
+    throw error;
   }
-
-  await db.update(nutritionistProfile).set(updateValues).where(eq(nutritionistProfile.id, id));
-
-  const result = await getNutritionistById(id);
-  revalidatePath("/nutritionist");
-  return result;
 }
 
 // ======== CHAT SESSION OPERATIONS ========
@@ -249,10 +251,11 @@ export async function getNutritionistSessions(nutritionistId: string): Promise<C
 
 export async function getNutritionistActiveSessions(nutritionistId: string): Promise<ChatSession[]> {
   try {
+    // Fetch all sessions for this nutritionist, both active and ended
     const sessions = await db
       .select()
       .from(chatSession)
-      .where(and(eq(chatSession.nutritionistId, nutritionistId), eq(chatSession.status, "active")))
+      .where(eq(chatSession.nutritionistId, nutritionistId))
       .orderBy(desc(chatSession.createdAt));
 
     return sessions.map((session) => ({
@@ -266,7 +269,7 @@ export async function getNutritionistActiveSessions(nutritionistId: string): Pro
       createdAt: session.createdAt,
     }));
   } catch (error) {
-    console.error("Error fetching nutritionist active sessions:", error);
+    console.error("Error fetching nutritionist sessions:", error);
     return [];
   }
 }
@@ -413,7 +416,7 @@ export async function sendMessage(
 export async function createNotification(notification: {
   recipientId: string;
   recipientType: "user" | "nutritionist";
-  type: "new_message" | "session_request" | "session_accepted" | "session_rejected" | "session_ended";
+  type: "new_message" | "session_ended";
   content: string;
   relatedEntityId?: string;
 }): Promise<ChatNotification> {
@@ -426,11 +429,7 @@ export async function createNotification(notification: {
     recipientType: notification.recipientType,
     type: notification.type,
     message: notification.content,
-    sessionId: notification.type === "new_message" || notification.type === "session_ended" ? notification.relatedEntityId || null : null,
-    requestId:
-      notification.type === "session_request" || notification.type === "session_accepted" || notification.type === "session_rejected"
-        ? notification.relatedEntityId || null
-        : null,
+    sessionId: notification.relatedEntityId || null,
     read: false,
     createdAt: now,
   });
@@ -462,7 +461,7 @@ export async function getUserNotifications(userId: string): Promise<ChatNotifica
     type: notification.type,
     message: notification.message, // Required field
     content: notification.message, // For flexibility
-    relatedEntityId: notification.sessionId || notification.requestId,
+    relatedEntityId: notification.sessionId,
     read: notification.read === null ? false : notification.read,
     createdAt: notification.createdAt,
   }));
@@ -482,7 +481,7 @@ export async function getNutritionistNotifications(nutritionistId: string): Prom
     type: notification.type,
     message: notification.message, // Required field
     content: notification.message, // For flexibility
-    relatedEntityId: notification.sessionId || notification.requestId,
+    relatedEntityId: notification.sessionId,
     read: notification.read === null ? false : notification.read,
     createdAt: notification.createdAt,
   }));

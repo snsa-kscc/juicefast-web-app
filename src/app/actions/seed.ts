@@ -15,16 +15,14 @@ const NUTRITIONIST_DATA_MAP: Record<string, Omit<NutritionistProfile, "id" | "us
     bio: "Registered dietitian with 8 years of experience specializing in weight management and sports nutrition.",
     specialties: ["Weight Management", "Sports Nutrition", "Meal Planning"],
     photoUrl: "/images/nutritionists/sarah.jpg",
-    availability: {
-      available: true,
-      nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
-      workingHours: {
-        monday: { start: "09:00", end: "17:00" },
-        tuesday: { start: "09:00", end: "17:00" },
-        wednesday: { start: "09:00", end: "17:00" },
-        thursday: { start: "09:00", end: "17:00" },
-        friday: { start: "09:00", end: "17:00" },
-      },
+    available: true,
+    nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
+    workingHours: {
+      monday: { start: "09:00", end: "17:00" },
+      tuesday: { start: "09:00", end: "17:00" },
+      wednesday: { start: "09:00", end: "17:00" },
+      thursday: { start: "09:00", end: "17:00" },
+      friday: { start: "09:00", end: "17:00" },
     },
     averageResponseTime: 5,
   },
@@ -33,16 +31,14 @@ const NUTRITIONIST_DATA_MAP: Record<string, Omit<NutritionistProfile, "id" | "us
     bio: "Clinical nutritionist specializing in diabetes management and heart-healthy diets.",
     specialties: ["Diabetes Management", "Heart Health", "Clinical Nutrition"],
     photoUrl: "/images/nutritionists/michael.jpg",
-    availability: {
-      available: true,
-      nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 120), // 2 hours from now
-      workingHours: {
-        monday: { start: "10:00", end: "18:00" },
-        tuesday: { start: "10:00", end: "18:00" },
-        wednesday: { start: "10:00", end: "18:00" },
-        thursday: { start: "10:00", end: "18:00" },
-        friday: { start: "10:00", end: "16:00" },
-      },
+    available: true,
+    nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
+    workingHours: {
+      monday: { start: "10:00", end: "18:00" },
+      tuesday: { start: "10:00", end: "18:00" },
+      wednesday: { start: "10:00", end: "18:00" },
+      thursday: { start: "10:00", end: "18:00" },
+      friday: { start: "10:00", end: "16:00" },
     },
     averageResponseTime: 8,
   },
@@ -51,16 +47,14 @@ const NUTRITIONIST_DATA_MAP: Record<string, Omit<NutritionistProfile, "id" | "us
     bio: "Plant-based nutrition expert with focus on holistic wellness and sustainable eating practices.",
     specialties: ["Plant-Based Nutrition", "Holistic Wellness", "Sustainable Eating"],
     photoUrl: "/images/nutritionists/amina.jpg",
-    availability: {
-      available: true,
-      nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 180), // 3 hours from now
-      workingHours: {
-        monday: { start: "08:00", end: "16:00" },
-        tuesday: { start: "08:00", end: "16:00" },
-        wednesday: { start: "08:00", end: "16:00" },
-        thursday: { start: "08:00", end: "16:00" },
-        friday: { start: "08:00", end: "14:00" },
-      },
+    available: true,
+    nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
+    workingHours: {
+      monday: { start: "08:00", end: "16:00" },
+      tuesday: { start: "08:00", end: "16:00" },
+      wednesday: { start: "08:00", end: "16:00" },
+      thursday: { start: "08:00", end: "16:00" },
+      friday: { start: "08:00", end: "14:00" },
     },
     averageResponseTime: 3,
   },
@@ -69,8 +63,9 @@ const NUTRITIONIST_DATA_MAP: Record<string, Omit<NutritionistProfile, "id" | "us
 /**
  * Seeds the database with initial nutritionist data
  * @param users Array of user data with IDs and emails
+ * @returns Object with success status and error if applicable
  */
-export async function seedNutritionistData(users: UserData[]) {
+export async function seedNutritionistData(users: UserData[]): Promise<{ success: boolean; error?: any }> {
   try {
     console.log("Seeding initial nutritionist data...");
 
@@ -93,7 +88,9 @@ export async function seedNutritionistData(users: UserData[]) {
           bio: nutritionistData.bio,
           specialties: nutritionistData.specialties,
           photoUrl: nutritionistData.photoUrl,
-          availability: nutritionistData.availability,
+          available: true,
+          nextAvailableSlot: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
+          workingHours: nutritionistData.workingHours,
           averageResponseTime: nutritionistData.averageResponseTime,
         };
 
