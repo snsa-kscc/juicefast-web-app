@@ -45,7 +45,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 h-[calc(100vh-4rem)]">
       <p>{session?.user.email}</p>
       <NutritionistAdmin
         nutritionistId={nutritionist?.id ?? ""}

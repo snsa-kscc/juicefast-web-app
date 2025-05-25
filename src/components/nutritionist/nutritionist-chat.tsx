@@ -507,7 +507,7 @@ export function NutritionistChat({
               </div>
             )}
 
-            <ScrollArea className="flex-1 p-4" ref={chatContainerRef}>
+            <ScrollArea className="flex-1 p-4 min-h-0" ref={chatContainerRef}>
               <div className="space-y-4">
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">

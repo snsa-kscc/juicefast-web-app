@@ -227,7 +227,7 @@ export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initi
       <CardContent className="flex-1 p-0 flex overflow-hidden">
         {/* Left sidebar with sessions list */}
         <div className="w-1/3 border-r flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
             <div className="px-4 pt-2">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="active">Active ({activeSessions.length})</TabsTrigger>
@@ -235,7 +235,7 @@ export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initi
               </TabsList>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               <TabsContent value="active" className="m-0">
                 {activeSessions.length === 0 ? (
                   <div className="p-4 text-center text-gray-500">No active sessions</div>
@@ -279,7 +279,7 @@ export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initi
                 )}
               </div>
 
-              <ScrollArea className="flex-1 p-4">
+              <ScrollArea className="flex-1 p-4 min-h-0">
                 {messages.length === 0 ? (
                   <div className="text-center text-gray-500 py-8">
                     <p>No messages yet</p>
