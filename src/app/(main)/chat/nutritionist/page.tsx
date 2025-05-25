@@ -11,7 +11,6 @@ export default async function NutritionistChatPage() {
     headers: await headers(),
   });
 
-  // Fallback to a demo user ID if not authenticated
   const userId = session?.user?.id ?? "";
 
   // Fetch data needed for the chat

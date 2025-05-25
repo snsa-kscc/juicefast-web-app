@@ -200,8 +200,6 @@ export function NutritionistChat({
   nutritionists: initialNutritionists,
   activeSession: initialActiveSession,
   initialMessages = [],
-  userProfile,
-  recentMeals,
 }: NutritionistChatProps) {
   // Use a ref to track if we're on the client side to avoid hydration mismatches
   const isMounted = useRef(false);
@@ -259,8 +257,6 @@ export function NutritionistChat({
           const sessionMessages = await getChatMessages(activeSession.id);
           setMessages(sessionMessages);
         } else {
-          // In a real app, you would check for pending requests here
-          // For now, we'll just set the state to selecting
           setChatState("selecting");
         }
       } catch (error) {
@@ -524,7 +520,7 @@ export function NutritionistChat({
                 {isLoading && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Spinner className="h-4 w-4" />
-                    <span>Typing</span>
+                    <span>Loading...</span>
                     <Skeleton className="h-3 w-3 rounded-full animate-bounce" />
                     <Skeleton className="h-3 w-3 rounded-full animate-bounce delay-150" />
                     <Skeleton className="h-3 w-3 rounded-full animate-bounce delay-300" />

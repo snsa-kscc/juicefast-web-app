@@ -2,9 +2,9 @@
 
 import { db } from "@/db";
 import { v4 as uuidv4 } from "uuid";
-import { eq, and, or, desc, asc, isNull } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm";
 import { nutritionistProfile, chatSession, chatMessage, chatNotification, user } from "@/db/schema";
-import { NutritionistProfile, ChatSession, ChatNotification, AvailabilityStatus } from "@/types/nutritionist";
+import { NutritionistProfile, ChatSession, ChatNotification } from "@/types/nutritionist";
 import { MessageType } from "@/components/nutritionist/chat-message";
 import { revalidatePath } from "next/cache";
 
@@ -128,7 +128,7 @@ export async function updateNutritionistProfile(id: string, updates: Partial<Nut
     if (updates.bio) updateData.bio = updates.bio;
     if (updates.specialties) updateData.specialties = updates.specialties;
     if (updates.photoUrl !== undefined) updateData.photoUrl = updates.photoUrl;
-    
+
     // Handle availability updates
     if (updates.available !== undefined) {
       updateData.available = updates.available;
@@ -140,7 +140,10 @@ export async function updateNutritionistProfile(id: string, updates: Partial<Nut
       updateData.workingHours = updates.workingHours;
     }
 
-    await db.update(nutritionistProfile).set({ ...updateData, updatedAt: new Date() }).where(eq(nutritionistProfile.id, id));
+    await db
+      .update(nutritionistProfile)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(nutritionistProfile.id, id));
 
     const result = await getNutritionistById(id);
     revalidatePath("/nutritionist");
@@ -232,31 +235,6 @@ export async function getUserActiveChatSession(userId: string): Promise<ChatSess
 export async function getNutritionistSessions(nutritionistId: string): Promise<ChatSession[]> {
   try {
     const sessions = await db.select().from(chatSession).where(eq(chatSession.nutritionistId, nutritionistId)).orderBy(desc(chatSession.createdAt));
-
-    return sessions.map((session) => ({
-      id: session.id,
-      userId: session.userId,
-      nutritionistId: session.nutritionistId,
-      status: session.status,
-      startedAt: session.startedAt,
-      endedAt: session.endedAt || undefined,
-      endedBy: session.endedBy || undefined,
-      createdAt: session.createdAt,
-    }));
-  } catch (error) {
-    console.error("Error fetching nutritionist sessions:", error);
-    return [];
-  }
-}
-
-export async function getNutritionistActiveSessions(nutritionistId: string): Promise<ChatSession[]> {
-  try {
-    // Fetch all sessions for this nutritionist, both active and ended
-    const sessions = await db
-      .select()
-      .from(chatSession)
-      .where(eq(chatSession.nutritionistId, nutritionistId))
-      .orderBy(desc(chatSession.createdAt));
 
     return sessions.map((session) => ({
       id: session.id,

@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChatInput } from "./chat-input";
 import { ChatMessage, MessageType } from "./chat-message";
-import { getNutritionistActiveSessions, getChatMessages, sendMessage, endChatSession, getUserNameById } from "@/app/actions/nutritionist-actions";
+import { getNutritionistSessions, getChatMessages, sendMessage, endChatSession, getUserNameById } from "@/app/actions/nutritionist-actions";
 import { ChatSession } from "@/types/nutritionist";
 
 interface NutritionistAdminProps {
@@ -40,12 +40,12 @@ export function NutritionistAdmin({ nutritionistId, initialActiveSessions, initi
     const loadData = async () => {
       try {
         // Get all sessions for this nutritionist
-        const allSessionsData = await getNutritionistActiveSessions(nutritionistId);
-        
+        const allSessionsData = await getNutritionistSessions(nutritionistId);
+
         // Separate active and completed sessions
         const activeSessionsData = allSessionsData.filter((s: ChatSession) => s.status !== "ended");
         const completedSessionsData = allSessionsData.filter((s: ChatSession) => s.status === "ended");
-        
+
         setActiveSessions(activeSessionsData);
         setCompletedSessions(completedSessionsData);
 

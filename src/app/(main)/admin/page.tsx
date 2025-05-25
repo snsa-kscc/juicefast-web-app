@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isUserAdmin, getNutritionistActiveSessions, getChatMessages, getNutritionistByUserId } from "@/app/actions/nutritionist-actions";
+import { isUserAdmin, getChatMessages, getNutritionistByUserId, getNutritionistSessions } from "@/app/actions/nutritionist-actions";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { NutritionistAdmin } from "@/components/nutritionist/nutritionist-admin";
@@ -24,11 +24,11 @@ export default async function AdminPage() {
   const nutritionist = await getNutritionistByUserId(userId);
 
   // Fetch all required data server-side
-  const activeSessions = await getNutritionistActiveSessions(nutritionist?.id ?? "");
+  const sessions = await getNutritionistSessions(nutritionist?.id ?? "");
 
   // For completed sessions, filter from active sessions
-  const completedSessions = activeSessions.filter((s: ChatSession) => s.status === "ended");
-  const activeSessionsList = activeSessions.filter((s: ChatSession) => s.status !== "ended");
+  const completedSessions = sessions.filter((s: ChatSession) => s.status === "ended");
+  const activeSessionsList = sessions.filter((s: ChatSession) => s.status !== "ended");
 
   // Pre-fetch messages for all sessions (both active and completed)
   const allSessionMessages: Record<string, MessageType[]> = {};
