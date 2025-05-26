@@ -1,43 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ImageScanner } from "@/components/meal-tracker/image-scanner";
 import { ManualEntryForm } from "@/components/meal-tracker/manual-entry-form";
 import { MealTrackerExtended } from "@/components/health-tracker/meal-tracker-extended";
-import { MacroData, MealEntry, MealType } from "@/types/health-metrics";
-import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
+import { MacroData, MealEntry, MealType, DailyHealthMetrics } from "@/types/health-metrics";
 import { ArrowLeft } from "lucide-react";
 import { MEALS_TRACKER_CONFIG } from "@/data/meals-tracker";
+import { addMeal } from "@/app/actions/health-actions";
 
-export default function MealsTrackerPage() {
+interface MealsTrackerClientProps {
+  userId: string;
+  initialMealsData: DailyHealthMetrics | null;
+}
+
+export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerClientProps) {
   const router = useRouter();
   const [activeEntryTab, setActiveEntryTab] = useState<"scan" | "manual">("scan");
-  const [meals, setMeals] = useState<MealEntry[]>(() => {
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
-    return dailyMetrics.meals || [];
-  });
+  const [meals, setMeals] = useState<MealEntry[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Initialize with data if available
+  useEffect(() => {
+    if (initialMealsData?.meals) {
+      setMeals(initialMealsData.meals);
+    }
+  }, [initialMealsData]);
 
-  const handleMealAdded = (mealData: MacroData) => {
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
+  const handleMealAdded = async (mealData: MacroData) => {
+    if (!userId) return;
     
-    const newMeal: MealEntry = {
-      mealType: MEALS_TRACKER_CONFIG.mealTypes[0].id as MealType, // Default to first meal type
-      timestamp: new Date(),
-      ...mealData,
-    };
-    
-    const updatedMeals = [...(dailyMetrics.meals || []), newMeal];
-    setMeals(updatedMeals);
-    
-    // Update storage
-    saveDailyMetrics(todayKey, {
-      ...dailyMetrics,
-      meals: updatedMeals,
-    });
+    try {
+      setIsLoading(true);
+      
+      const newMeal: MealEntry = {
+        mealType: MEALS_TRACKER_CONFIG.mealTypes[0].id as MealType, // Default to first meal type
+        timestamp: new Date(),
+        ...mealData,
+      };
+      
+      // Save to database
+      await addMeal(userId, new Date(), newMeal);
+      
+      // Update local state
+      const updatedMeals = [...meals, newMeal];
+      setMeals(updatedMeals);
+    } catch (error) {
+      console.error("Failed to save meal data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAddMealByType = (mealType: MealType) => {
@@ -65,6 +79,7 @@ export default function MealsTrackerPage() {
             variant={activeEntryTab === "scan" ? "default" : "ghost"}
             onClick={() => setActiveEntryTab("scan")}
             className="flex-1 rounded-none rounded-tl-md"
+            disabled={isLoading}
           >
             Scan Meal
           </Button>
@@ -72,6 +87,7 @@ export default function MealsTrackerPage() {
             variant={activeEntryTab === "manual" ? "default" : "ghost"}
             onClick={() => setActiveEntryTab("manual")}
             className="flex-1 rounded-none rounded-tr-md"
+            disabled={isLoading}
           >
             Manual Entry
           </Button>

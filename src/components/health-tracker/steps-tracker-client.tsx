@@ -5,52 +5,61 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { StepEntry } from "@/types/health-metrics";
-import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
+import { StepEntry, DailyHealthMetrics } from "@/types/health-metrics";
 import { ArrowLeft, FootprintsIcon } from "lucide-react";
 import { STEPS_TRACKER_CONFIG } from "@/data/steps-tracker";
+import { addSteps } from "@/app/actions/health-actions";
 
-export default function StepsTrackerPage() {
+interface StepsTrackerClientProps {
+  userId: string;
+  initialStepsData: DailyHealthMetrics | null;
+}
+
+export function StepsTrackerClient({ userId, initialStepsData }: StepsTrackerClientProps) {
   const router = useRouter();
   const [stepCount, setStepCount] = useState<number>(0);
-  const [stepEntries, setStepEntries] = useState<StepEntry[]>([]);
+  const [stepEntries, setStepEntries] = useState<StepEntry[]>(initialStepsData?.steps || []);
   const [totalSteps, setTotalSteps] = useState<number>(0);
   const [dailyGoal] = useState<number>(STEPS_TRACKER_CONFIG.dailyGoal); // Daily step goal
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Load step entries on mount
+  // Initialize with data if available
   useEffect(() => {
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
-    setStepEntries(dailyMetrics.steps || []);
-    
-    // Calculate total
-    const total = (dailyMetrics.steps || []).reduce((sum, entry) => sum + entry.count, 0);
-    setTotalSteps(total);
-  }, []);
+    if (initialStepsData?.steps) {
+      setStepEntries(initialStepsData.steps);
+      
+      // Calculate total
+      const total = initialStepsData.steps.reduce((sum, entry) => sum + entry.count, 0);
+      setTotalSteps(total);
+    }
+  }, [initialStepsData]);
   
-  const handleAddSteps = () => {
-    if (stepCount <= 0) return;
+  const handleAddSteps = async () => {
+    if (stepCount <= 0 || !userId) return;
     
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
-    
-    const newEntry: StepEntry = {
-      count: stepCount,
-      timestamp: new Date()
-    };
-    
-    const updatedEntries = [...(dailyMetrics.steps || []), newEntry];
-    const newTotal = totalSteps + stepCount;
-    
-    setStepEntries(updatedEntries);
-    setTotalSteps(newTotal);
-    setStepCount(0); // Reset input
-    
-    // Update storage
-    saveDailyMetrics(todayKey, {
-      ...dailyMetrics,
-      steps: updatedEntries
-    });
+    try {
+      setIsLoading(true);
+      
+      const newEntry: StepEntry = {
+        count: stepCount,
+        timestamp: new Date()
+      };
+      
+      // Save to database
+      await addSteps(userId, new Date(), newEntry);
+      
+      // Update local state
+      const updatedEntries = [...stepEntries, newEntry];
+      const newTotal = totalSteps + stepCount;
+      
+      setStepEntries(updatedEntries);
+      setTotalSteps(newTotal);
+      setStepCount(0); // Reset input
+    } catch (error) {
+      console.error("Failed to save steps data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const progressPercentage = Math.min(100, (totalSteps / dailyGoal) * 100);
@@ -141,8 +150,11 @@ export default function StepsTrackerPage() {
                   onChange={(e) => setStepCount(parseInt(e.target.value) || 0)}
                   className="flex-1"
                 />
-                <Button onClick={handleAddSteps} disabled={stepCount <= 0}>
-                  Add
+                <Button 
+                  onClick={handleAddSteps} 
+                  disabled={stepCount <= 0 || isLoading}
+                >
+                  {isLoading ? "Adding..." : "Add"}
                 </Button>
               </div>
             </div>

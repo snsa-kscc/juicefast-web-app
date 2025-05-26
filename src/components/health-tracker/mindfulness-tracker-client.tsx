@@ -7,53 +7,62 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MindfulnessEntry } from "@/types/health-metrics";
-import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
+import { MindfulnessEntry, DailyHealthMetrics } from "@/types/health-metrics";
 import { ArrowLeft, BrainIcon, Timer } from "lucide-react";
 import { MINDFULNESS_TRACKER_CONFIG } from "@/data/mindfulness-tracker";
+import { addMindfulness } from "@/app/actions/health-actions";
 
-export default function MindfulnessTrackerPage() {
+interface MindfulnessTrackerClientProps {
+  userId: string;
+  initialMindfulnessData: DailyHealthMetrics | null;
+}
+
+export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: MindfulnessTrackerClientProps) {
   const router = useRouter();
   const [minutes, setMinutes] = useState<number>(MINDFULNESS_TRACKER_CONFIG.defaultDuration);
   const [activity, setActivity] = useState<string>(MINDFULNESS_TRACKER_CONFIG.meditationTypes[0].id);
   const [mindfulnessEntries, setMindfulnessEntries] = useState<MindfulnessEntry[]>([]);
   const [totalMinutes, setTotalMinutes] = useState<number>(0);
   const [dailyGoal] = useState<number>(Math.round(MINDFULNESS_TRACKER_CONFIG.weeklyGoal / 7)); // Daily goal based on weekly goal
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Load mindfulness entries on mount
+  // Initialize with data if available
   useEffect(() => {
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
-    setMindfulnessEntries(dailyMetrics.mindfulness || []);
-    
-    // Calculate total
-    const total = (dailyMetrics.mindfulness || []).reduce((sum, entry) => sum + entry.minutes, 0);
-    setTotalMinutes(total);
-  }, []);
+    if (initialMindfulnessData?.mindfulness) {
+      setMindfulnessEntries(initialMindfulnessData.mindfulness);
+      
+      // Calculate total
+      const total = initialMindfulnessData.mindfulness.reduce((sum, entry) => sum + entry.minutes, 0);
+      setTotalMinutes(total);
+    }
+  }, [initialMindfulnessData]);
   
-  const handleAddMindfulness = () => {
-    if (minutes <= 0) return;
+  const handleAddMindfulness = async () => {
+    if (minutes <= 0 || !userId) return;
     
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
-    
-    const newEntry: MindfulnessEntry = {
-      minutes: minutes,
-      activity: activity,
-      timestamp: new Date()
-    };
-    
-    const updatedEntries = [...(dailyMetrics.mindfulness || []), newEntry];
-    const newTotal = totalMinutes + minutes;
-    
-    setMindfulnessEntries(updatedEntries);
-    setTotalMinutes(newTotal);
-    
-    // Update storage
-    saveDailyMetrics(todayKey, {
-      ...dailyMetrics,
-      mindfulness: updatedEntries
-    });
+    try {
+      setIsLoading(true);
+      
+      const newEntry: MindfulnessEntry = {
+        minutes: minutes,
+        activity: activity,
+        timestamp: new Date()
+      };
+      
+      // Save to database
+      await addMindfulness(userId, new Date(), newEntry);
+      
+      // Update local state
+      const updatedEntries = [...mindfulnessEntries, newEntry];
+      const newTotal = totalMinutes + minutes;
+      
+      setMindfulnessEntries(updatedEntries);
+      setTotalMinutes(newTotal);
+    } catch (error) {
+      console.error("Failed to save mindfulness data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const progressPercentage = Math.min(100, (totalMinutes / dailyGoal) * 100);
@@ -108,43 +117,47 @@ export default function MindfulnessTrackerPage() {
                   r="45" 
                   fill="none" 
                   stroke="#e5e7eb" 
-                  strokeWidth="10" 
+                  strokeWidth="10"
                 />
                 <circle 
                   cx="50" 
                   cy="50" 
                   r="45" 
                   fill="none" 
-                  stroke="#818cf8" 
-                  strokeWidth="10" 
+                  stroke="#6366f1" 
+                  strokeWidth="10"
                   strokeDasharray="283"
                   strokeDashoffset={283 - (283 * progressPercentage / 100)}
                   transform="rotate(-90 50 50)"
                 />
+                <text 
+                  x="50" 
+                  y="50" 
+                  textAnchor="middle" 
+                  dominantBaseline="middle"
+                  fontSize="16"
+                  fontWeight="bold"
+                  fill="#6366f1"
+                >
+                  {totalMinutes}
+                </text>
+                <text 
+                  x="50" 
+                  y="65" 
+                  textAnchor="middle" 
+                  dominantBaseline="middle"
+                  fontSize="8"
+                  fill="#6b7280"
+                >
+                  minutes
+                </text>
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold">{totalMinutes}</span>
-                <span className="text-xs text-gray-500">minutes</span>
-              </div>
             </div>
           </div>
-          
-          {/* Benefits achieved */}
-          {totalMinutes > 0 && (
-            <div className="bg-indigo-50 p-3 rounded-md text-sm">
-              <div className="font-medium text-indigo-700 mb-1">Benefits Achieved</div>
-              <ul className="text-indigo-600 space-y-1 pl-5 list-disc">
-                {totalMinutes >= 5 && <li>Reduced stress</li>}
-                {totalMinutes >= 10 && <li>Improved focus</li>}
-                {totalMinutes >= 15 && <li>Better emotional regulation</li>}
-                {totalMinutes >= 20 && <li>Enhanced self-awareness</li>}
-              </ul>
-            </div>
-          )}
         </CardContent>
       </Card>
       
-      {/* Add Mindfulness Form */}
+      {/* Mindfulness Entry Form */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Log Practice</CardTitle>
@@ -157,7 +170,7 @@ export default function MindfulnessTrackerPage() {
               </label>
               <Select value={activity} onValueChange={setActivity}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an activity" />
+                  <SelectValue placeholder="Select activity" />
                 </SelectTrigger>
                 <SelectContent>
                   {activityOptions.map(option => (
@@ -204,8 +217,9 @@ export default function MindfulnessTrackerPage() {
             <Button 
               className="w-full" 
               onClick={handleAddMindfulness}
+              disabled={isLoading}
             >
-              Log Practice
+              {isLoading ? "Saving..." : "Log Practice"}
             </Button>
           </div>
         </CardContent>

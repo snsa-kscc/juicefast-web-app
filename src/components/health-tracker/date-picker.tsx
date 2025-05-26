@@ -6,23 +6,34 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { getAvailableDateKeys, formatDateKey } from "@/lib/daily-tracking-store";
+import { formatDateKey } from "@/lib/date-utils";
+import { getAvailableDateKeys } from "@/app/actions/health-actions";
 
 interface DatePickerProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  userId?: string;
 }
 
-export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
+export function DatePicker({ selectedDate, onDateChange, userId = "user123" }: DatePickerProps) {
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [isClient, setIsClient] = useState(false);
 
-  // Load available dates from storage
+  // Load available dates from database
   useEffect(() => {
     setIsClient(true);
-    const dateKeys = getAvailableDateKeys();
-    setAvailableDates(dateKeys.map((key) => new Date(key)));
-  }, []);
+    async function fetchAvailableDates() {
+      try {
+        const dateKeys = await getAvailableDateKeys(userId);
+        setAvailableDates(dateKeys.map((dateKey: string) => new Date(dateKey)));
+      } catch (error) {
+        console.error("Failed to fetch available dates:", error);
+        setAvailableDates([]);
+      }
+    }
+    
+    fetchAvailableDates();
+  }, [userId]);
 
   // Handle navigation to previous day
   const handlePreviousDay = () => {

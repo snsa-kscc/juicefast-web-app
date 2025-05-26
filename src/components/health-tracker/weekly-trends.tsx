@@ -4,25 +4,41 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { DailyHealthMetrics } from "@/types/health-metrics";
-import { getWeeklyMetrics, getWeeklyAverageScore } from "@/lib/daily-tracking-store";
+import { getWeeklyMetrics, getWeeklyAverageScore } from "@/app/actions/health-actions";
 import { format } from "date-fns";
 import { TrendingUp } from "lucide-react";
 
-export function WeeklyTrends() {
+interface WeeklyTrendsProps {
+  userId: string;
+}
+
+export function WeeklyTrends({ userId }: WeeklyTrendsProps) {
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [averageScore, setAverageScore] = useState(0);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsClient(true);
-    loadWeeklyData();
-  }, []);
+    if (userId) {
+      loadWeeklyData(userId);
+    }
+  }, [userId]);
 
-  const loadWeeklyData = () => {
-    const weeklyMetrics = getWeeklyMetrics();
-    const formattedData = formatWeeklyData(weeklyMetrics);
-    setWeeklyData(formattedData);
-    setAverageScore(getWeeklyAverageScore());
+  const loadWeeklyData = async (userId: string) => {
+    try {
+      setIsLoading(true);
+      const weeklyMetrics = await getWeeklyMetrics(userId);
+      const formattedData = formatWeeklyData(weeklyMetrics);
+      setWeeklyData(formattedData);
+      
+      const avgScore = await getWeeklyAverageScore(userId);
+      setAverageScore(avgScore);
+    } catch (error) {
+      console.error("Failed to load weekly data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatWeeklyData = (metrics: DailyHealthMetrics[]) => {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText, streamText } from "ai";
 import { google } from "@ai-sdk/google";
-import { loadDailyMetrics, getTodayKey } from "@/lib/daily-tracking-store";
+import { getDailyMetrics } from "@/app/actions/health-actions";
+import { formatDateKey, getTodayKey } from "@/lib/date-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     // Get the user's health data for context
     const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
+    const dailyMetrics = await getDailyMetrics(userId, new Date(todayKey)) || { meals: [], waterIntake: [], steps: [], sleep: null, mindfulness: [], totalScore: 0 };
 
     // Create a context message with the user's health data
     const healthContext = `

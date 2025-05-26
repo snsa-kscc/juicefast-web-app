@@ -5,49 +5,61 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { WaterIntake } from "@/types/health-metrics";
-import { formatDateKey, getTodayKey, loadDailyMetrics, saveDailyMetrics } from "@/lib/daily-tracking-store";
+import { WaterIntake, DailyHealthMetrics } from "@/types/health-metrics";
 import { ArrowLeft, Droplets, Plus, Minus } from "lucide-react";
 import { WATER_TRACKER_CONFIG } from "@/data/water-tracker";
+import { addWaterIntake } from "@/app/actions/health-actions";
 
-export default function WaterTrackerPage() {
+interface WaterTrackerClientProps {
+  userId: string;
+  initialWaterData: DailyHealthMetrics | null;
+}
+
+export function WaterTrackerClient({ userId, initialWaterData }: WaterTrackerClientProps) {
   const router = useRouter();
+  
   const [waterAmount, setWaterAmount] = useState<number>(WATER_TRACKER_CONFIG.defaultAmount);
   const [waterEntries, setWaterEntries] = useState<WaterIntake[]>([]);
   const [totalWater, setTotalWater] = useState<number>(0);
   const [dailyGoal] = useState<number>(WATER_TRACKER_CONFIG.dailyGoal);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // Load water entries on mount
+  // Initialize with data if available
   useEffect(() => {
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
-    setWaterEntries(dailyMetrics.waterIntake || []);
-    
-    // Calculate total
-    const total = (dailyMetrics.waterIntake || []).reduce((sum, entry) => sum + entry.amount, 0);
-    setTotalWater(total);
-  }, []);
+    if (initialWaterData?.waterIntake) {
+      setWaterEntries(initialWaterData.waterIntake);
+      
+      // Calculate total
+      const total = initialWaterData.waterIntake.reduce((sum, entry) => sum + entry.amount, 0);
+      setTotalWater(total);
+    }
+  }, [initialWaterData]);
   
-  const handleAddWater = () => {
-    const todayKey = getTodayKey();
-    const dailyMetrics = loadDailyMetrics(todayKey);
+  const handleAddWater = async () => {
+    if (!userId) return;
     
-    const newEntry: WaterIntake = {
-      amount: waterAmount,
-      timestamp: new Date()
-    };
-    
-    const updatedEntries = [...(dailyMetrics.waterIntake || []), newEntry];
-    const newTotal = totalWater + waterAmount;
-    
-    setWaterEntries(updatedEntries);
-    setTotalWater(newTotal);
-    
-    // Update storage
-    saveDailyMetrics(todayKey, {
-      ...dailyMetrics,
-      waterIntake: updatedEntries
-    });
+    try {
+      setIsLoading(true);
+      
+      const newEntry: WaterIntake = {
+        amount: waterAmount,
+        timestamp: new Date()
+      };
+      
+      // Save to database
+      await addWaterIntake(userId, new Date(), newEntry);
+      
+      // Update local state
+      const updatedEntries = [...waterEntries, newEntry];
+      const newTotal = totalWater + waterAmount;
+      
+      setWaterEntries(updatedEntries);
+      setTotalWater(newTotal);
+    } catch (error) {
+      console.error("Failed to save water data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const progressPercentage = Math.min(100, (totalWater / dailyGoal) * 100);
@@ -88,8 +100,8 @@ export default function WaterTrackerPage() {
           </div>
           
           {/* Water bottle visualization */}
-          <div className="flex justify-center mb-6">
-            <div className="relative w-24 h-48 border-2 border-blue-400 rounded-b-xl overflow-hidden">
+          <div className="flex justify-center mb-4">
+            <div className="relative w-24 h-48 border-2 border-blue-200 rounded-b-xl overflow-hidden">
               <div 
                 className="absolute bottom-0 left-0 right-0 bg-blue-400 transition-all duration-500"
                 style={{ height: `${progressPercentage}%` }}
@@ -128,6 +140,7 @@ export default function WaterTrackerPage() {
                   variant="outline" 
                   size="icon" 
                   onClick={() => setWaterAmount(Math.max(WATER_TRACKER_CONFIG.minAmount, waterAmount - WATER_TRACKER_CONFIG.stepSize))}
+                  disabled={isLoading}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -139,12 +152,14 @@ export default function WaterTrackerPage() {
                   step={WATER_TRACKER_CONFIG.stepSize}
                   onValueChange={(value) => setWaterAmount(value[0])}
                   className="flex-1"
+                  disabled={isLoading}
                 />
                 
                 <Button 
                   variant="outline" 
                   size="icon" 
                   onClick={() => setWaterAmount(Math.min(WATER_TRACKER_CONFIG.maxAmount, waterAmount + WATER_TRACKER_CONFIG.stepSize))}
+                  disabled={isLoading}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -160,6 +175,7 @@ export default function WaterTrackerPage() {
                   size="sm"
                   onClick={() => setWaterAmount(amount)}
                   className={waterAmount === amount ? "border-blue-500 text-blue-500" : ""}
+                  disabled={isLoading}
                 >
                   {amount} ml
                 </Button>
@@ -169,8 +185,9 @@ export default function WaterTrackerPage() {
             <Button 
               className="w-full" 
               onClick={handleAddWater}
+              disabled={isLoading}
             >
-              Add Water
+              {isLoading ? "Adding..." : "Add Water"}
             </Button>
           </div>
         </CardContent>
