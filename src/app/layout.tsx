@@ -14,8 +14,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Project Taurus",
-  description: "This is a project to help you track your macros.",
+  title: "Juicefast Nutrition App",
+  description:
+    "Juicefast is a mobile app that helps you track your macronutrients and stay on top of your nutrition. It's the perfect tool for anyone looking to optimize their diet and reach their health and fitness goals.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({

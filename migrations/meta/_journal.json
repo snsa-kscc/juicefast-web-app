@@ -8,6 +8,41 @@
       "when": 1746207601957,
       "tag": "0000_closed_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1747849083377,
+      "tag": "0001_melted_jubilee",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1747849857129,
+      "tag": "0002_sweet_rage",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747927472608,
+      "tag": "0003_watery_ezekiel",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1748171454765,
+      "tag": "0004_special_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1748259549299,
+      "tag": "0005_faithful_abomination",
+      "breakpoints": true
     }
   ]
 }

@@ -10,9 +10,10 @@ interface QuizCompleteProps {
   answers: QuizAnswer[];
   onReset: () => void;
   onAbort: () => void;
+  onComplete?: () => void;
 }
 
-export function QuizComplete({ answers, onReset, onAbort }: QuizCompleteProps) {
+export function QuizComplete({ answers, onReset, onAbort, onComplete }: QuizCompleteProps) {
   // Get question titles for display
   const getQuestionTitle = (questionId: string) => {
     const question = quizQuestions.find((q) => q.id === questionId);
@@ -181,12 +182,17 @@ export function QuizComplete({ answers, onReset, onAbort }: QuizCompleteProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-row gap-3 justify-between mt-6">
-        <Button onClick={onReset} variant="outline" className="shadow-none cursor-pointer">
-          Retake Quiz
-        </Button>
-        <Button>
-          <Link href="/">Go Home</Link>
+      <CardFooter className="flex flex-col sm:flex-row gap-3 justify-between mt-6">
+        <div className="flex gap-3">
+          <Button onClick={onReset} variant="outline" className="shadow-none cursor-pointer">
+            Retake Quiz
+          </Button>
+          <Button variant="outline" onClick={onAbort}>
+            Go Home
+          </Button>
+        </div>
+        <Button onClick={onComplete} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          Complete Onboarding
         </Button>
       </CardFooter>
     </Card>
