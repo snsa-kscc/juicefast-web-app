@@ -8,25 +8,25 @@
  */
 export function generateReferralCode(name?: string): string {
   // Get initials if name is provided
-  let prefix = '';
+  let prefix = "";
   if (name) {
-    const nameParts = name.split(' ');
-    prefix = nameParts.map(part => part.charAt(0).toUpperCase()).join('');
+    const nameParts = name.split(" ");
+    prefix = nameParts.map((part) => part.charAt(0).toUpperCase()).join("");
   }
-  
+
   // If no initials, use a random letter
   if (!prefix) {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     prefix = letters.charAt(Math.floor(Math.random() * letters.length));
   }
-  
+
   // Generate random alphanumeric string (6 characters)
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let randomPart = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
   for (let i = 0; i < 6; i++) {
     randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  
+
   return `${prefix}${randomPart}`;
 }
 
@@ -38,6 +38,7 @@ export function generateReferralCode(name?: string): string {
 export function createReferralLink(referralCode: string): string {
   // Use the environment variable for the base URL
   const baseUrl = process.env.NEXT_PUBLIC_BASEURL || window.location.origin;
+  console.log(baseUrl);
   return `${baseUrl}/sign-up?ref=${referralCode}`;
 }
 
@@ -49,7 +50,7 @@ export function createReferralLink(referralCode: string): string {
 export function extractReferralCode(url: string): string | null {
   try {
     const urlObj = new URL(url);
-    return urlObj.searchParams.get('ref');
+    return urlObj.searchParams.get("ref");
   } catch (e) {
     return null;
   }
