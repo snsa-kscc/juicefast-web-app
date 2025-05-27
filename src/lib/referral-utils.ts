@@ -37,8 +37,23 @@ export function generateReferralCode(name?: string): string {
  */
 export function createReferralLink(referralCode: string): string {
   // Use the environment variable for the base URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASEURL || window.location.origin;
-  console.log(baseUrl);
+  let baseUrl;
+  
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    // Try to get from env variable first, fallback to window.location.origin
+    baseUrl = process.env.NEXT_PUBLIC_BASEURL || window.location.origin;
+  } else {
+    // Server-side rendering - only use env variable
+    baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
+  }
+  
+  // Fallback to a default if somehow both are empty (shouldn't happen)
+  if (!baseUrl) {
+    console.warn('No base URL found for referral link, using default');
+    baseUrl = 'https://your-app-domain.vercel.app';
+  }
+  
   return `${baseUrl}/sign-up?ref=${referralCode}`;
 }
 
