@@ -6,6 +6,7 @@ import { eq, and, desc, between } from "drizzle-orm";
 import { userProfile, dailyHealthMetrics, mealEntry, waterIntake, stepEntry, sleepEntry, mindfulnessEntry } from "@/db/schema";
 import { DailyHealthMetrics, MealEntry, WaterIntake, StepEntry, SleepEntry, MindfulnessEntry, UserProfile, calculateHealthScore } from "@/types/health-metrics";
 import { revalidatePath } from "next/cache";
+import { generateReferralCode } from "@/lib/referral-utils";
 
 // ======== USER PROFILE OPERATIONS ========
 
@@ -510,6 +511,112 @@ export async function addMindfulness(userId: string, date: Date, mindfulness: Mi
   } catch (error) {
     console.error("Failed to add mindfulness:", error);
     return false;
+  }
+}
+
+// ======== REFERRAL SYSTEM OPERATIONS ========
+
+// Generate a referral code for a user and save it to their profile
+export async function generateAndSaveReferralCode(userId: string, name?: string): Promise<string | null> {
+  try {
+    // Get the user profile
+    const userProf = await getUserProfile(userId);
+
+    if (!userProf) {
+      console.error("User profile not found");
+      return null;
+    }
+
+    // Check if user already has a referral code
+    if (userProf.referralCode) {
+      return userProf.referralCode;
+    }
+
+    // Generate a new referral code
+    const referralCode = generateReferralCode(name);
+
+    // Update the user profile
+    const updatedProfile = {
+      ...userProf,
+      referralCode,
+      referralCount: 0,
+      referrals: [],
+    };
+
+    // Save the updated profile
+    await saveUserProfile(updatedProfile);
+
+    return referralCode;
+  } catch (error) {
+    console.error("Failed to generate and save referral code:", error);
+    return null;
+  }
+}
+
+// Apply a referral code when a user signs up
+export async function applyReferralCode(userId: string, referralCode: string): Promise<boolean> {
+  try {
+    // Find the referrer's profile by referral code
+    const referrerProfiles = await db.select().from(userProfile).where(eq(userProfile.referralCode, referralCode));
+
+    if (referrerProfiles.length === 0) {
+      console.error("Referrer not found with code:", referralCode);
+      return false;
+    }
+
+    const referrerProfile = referrerProfiles[0];
+
+    // Update the new user's profile with the referral info
+    const newUserProf = await getUserProfile(userId);
+
+    if (!newUserProf) {
+      console.error("New user profile not found");
+      return false;
+    }
+
+    const updatedNewUserProfile = {
+      ...newUserProf,
+      referredBy: referralCode,
+    };
+
+    await saveUserProfile(updatedNewUserProfile);
+
+    // Update the referrer's profile with the new referral
+    const currentReferrals = referrerProfile.referrals || [];
+    const updatedReferrals = [...currentReferrals, userId];
+
+    await db
+      .update(userProfile)
+      .set({
+        referralCount: (referrerProfile.referralCount || 0) + 1,
+        referrals: updatedReferrals,
+        updatedAt: new Date(),
+      })
+      .where(eq(userProfile.id, referrerProfile.id));
+
+    return true;
+  } catch (error) {
+    console.error("Failed to apply referral code:", error);
+    return false;
+  }
+}
+
+// Get referral statistics for a user
+export async function getReferralStats(userId: string): Promise<{ count: number; referrals: string[] } | null> {
+  try {
+    const userProf = await getUserProfile(userId);
+
+    if (!userProf) {
+      return null;
+    }
+
+    return {
+      count: userProf.referralCount || 0,
+      referrals: userProf.referrals || [],
+    };
+  } catch (error) {
+    console.error("Failed to get referral stats:", error);
+    return null;
   }
 }
 

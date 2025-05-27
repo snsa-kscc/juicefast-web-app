@@ -8,16 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserProfile } from "@/types/health-metrics";
-import { saveUserProfile } from "@/app/actions/health-actions";
-import { UserIcon, RulerIcon, ScaleIcon, CalendarIcon, ActivityIcon, LogOutIcon, SettingsIcon, BellIcon, HeartIcon, BadgeIcon } from "lucide-react";
+import { saveUserProfile, generateAndSaveReferralCode } from "@/app/actions/health-actions";
+import { UserIcon, RulerIcon, ScaleIcon, CalendarIcon, ActivityIcon, LogOutIcon, SettingsIcon, BellIcon, HeartIcon, BadgeIcon, Users } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { ReferralSection } from "@/components/health-tracker/referral-section";
+import { toast } from "sonner";
 
 interface ProfileClientProps {
   userId: string;
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    image?: string | null;
+  } | null;
   initialProfile: UserProfile | null;
 }
 
-export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
+export function ProfileClient({ userId, user, initialProfile }: ProfileClientProps) {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
   const [isEditing, setIsEditing] = useState(false);
@@ -29,6 +37,7 @@ export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
   const [gender, setGender] = useState<string | undefined>(initialProfile?.gender);
   const [activityLevel, setActivityLevel] = useState<"sedentary" | "light" | "moderate" | "active" | "very_active" | undefined>(initialProfile?.activityLevel);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingReferralCode, setIsGeneratingReferralCode] = useState(false);
 
   const handleSaveProfile = async () => {
     if (!userId) return;
@@ -50,6 +59,17 @@ export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
         referrals: profile?.referrals || [],
       };
 
+      // If no referral code exists, generate one
+      if (!updatedProfile.referralCode && user?.name) {
+        setIsGeneratingReferralCode(true);
+        const code = await generateAndSaveReferralCode(userId, user.name);
+        if (code) {
+          updatedProfile.referralCode = code;
+          toast.success("Generated your unique referral code!");
+        }
+        setIsGeneratingReferralCode(false);
+      }
+
       // Save to database
       await saveUserProfile(updatedProfile);
 
@@ -58,6 +78,7 @@ export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to save profile:", error);
+      toast.error("Failed to save profile");
     } finally {
       setIsLoading(false);
     }
@@ -83,11 +104,14 @@ export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center space-y-4">
-                <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserIcon className="h-12 w-12 text-primary" />
+                <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {user?.image ? (
+                    <img src={user.image} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-12 w-12 text-primary" />
+                  )}
                 </div>
-                <h2 className="text-xl font-semibold">Health Tracker User</h2>
-
+                <h2 className="text-xl font-semibold">{user?.name || (user?.email ? user.email.split("@")[0] : "Health Tracker User")}</h2>
                 <div className="w-full space-y-2 mt-4">
                   <Button variant="outline" className="w-full flex justify-start" onClick={() => setIsEditing(true)}>
                     <SettingsIcon className="mr-2 h-4 w-4" />
@@ -162,8 +186,6 @@ export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
                         <SelectContent>
                           <SelectItem value="male">Male</SelectItem>
                           <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="non-binary">Non-binary</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -316,6 +338,21 @@ export function ProfileClient({ userId, initialProfile }: ProfileClientProps) {
                   </Card>
                 </div>
               </div>
+
+              {/* Referral Section */}
+              <ReferralSection 
+                profile={profile} 
+                onUpdateProfile={async (updatedProfile) => {
+                  try {
+                    await saveUserProfile(updatedProfile);
+                    setProfile(updatedProfile);
+                    toast.success("Profile updated with referral information");
+                  } catch (error) {
+                    console.error("Failed to update profile with referral info:", error);
+                    toast.error("Failed to update profile");
+                  }
+                }} 
+              />
             </CardContent>
           </Card>
         </div>
