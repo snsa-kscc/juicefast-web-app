@@ -1,61 +1,58 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserProfile as UserProfileType } from "@/types/health-metrics";
-import { getUserReferralData, saveReferralData } from "@/app/actions/referral-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Share, Copy, Check, Users } from "lucide-react";
 import { generateReferralCode, createReferralLink } from "@/lib/referral-utils";
+import { getUserReferralData, saveReferralData } from "@/app/actions/referral-actions";
 import { toast } from "sonner";
 
-interface ReferralSectionProps {
+interface StandaloneReferralProps {
   userId: string;
-  profile?: UserProfileType | null; // Make profile optional
-  onUpdateProfile?: (profile: UserProfileType) => void; // Make onUpdateProfile optional
+  userName?: string;
 }
 
-export function ReferralSection({ userId, profile, onUpdateProfile }: ReferralSectionProps) {
+/**
+ * A standalone referral component that doesn't depend on profile data
+ * This can be used anywhere in the application, not just in the profile page
+ */
+export function StandaloneReferral({ userId, userName }: StandaloneReferralProps) {
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [referralData, setReferralData] = useState<{
     referralCode: string;
     referralCount: number;
     referrals: string[];
     referredBy?: string;
   }>({ 
-    referralCode: profile?.referralCode || "", 
-    referralCount: profile?.referralCount || 0,
-    referrals: profile?.referrals || [],
-    referredBy: profile?.referredBy
+    referralCode: "", 
+    referralCount: 0,
+    referrals: [],
   });
   
   // Load referral data on component mount
   useEffect(() => {
     const loadReferralData = async () => {
       if (userId) {
+        setLoading(true);
         const data = await getUserReferralData(userId);
         if (data) {
           setReferralData(data);
-        } else if (profile?.referralCode) {
-          // Fallback to profile data if available
-          setReferralData({
-            referralCode: profile.referralCode,
-            referralCount: profile.referralCount || 0,
-            referrals: profile.referrals || [],
-            referredBy: profile.referredBy
-          });
         }
+        setLoading(false);
       }
     };
     
     loadReferralData();
-  }, [userId, profile]);
+  }, [userId]);
   
   // Generate a referral code if one doesn't exist
   const ensureReferralCode = async () => {
     if (!referralData.referralCode && userId) {
-      const newCode = generateReferralCode();
+      setLoading(true);
+      const newCode = generateReferralCode(userName);
       const updatedData = {
         ...referralData,
         referralCode: newCode,
@@ -66,24 +63,16 @@ export function ReferralSection({ userId, profile, onUpdateProfile }: ReferralSe
       // Save the new referral data
       await saveReferralData(userId, updatedData);
       setReferralData(updatedData);
-      
-      // Also update profile if onUpdateProfile is provided
-      if (profile && onUpdateProfile) {
-        const newProfile = { ...profile };
-        newProfile.referralCode = newCode;
-        newProfile.referralCount = 0;
-        newProfile.referrals = [];
-        onUpdateProfile(newProfile);
-      }
+      setLoading(false);
     }
   };
   
   // Make sure we have a referral code
   useEffect(() => {
-    if (!referralData.referralCode && userId) {
+    if (!loading && !referralData.referralCode && userId) {
       ensureReferralCode();
     }
-  }, [referralData.referralCode, userId]);
+  }, [referralData.referralCode, userId, loading]);
   
   const referralCode = referralData.referralCode || "";
   const referralLink = referralCode ? createReferralLink(referralCode) : "";
@@ -118,6 +107,24 @@ export function ReferralSection({ userId, profile, onUpdateProfile }: ReferralSe
       copyToClipboard();
     }
   };
+  
+  if (loading) {
+    return (
+      <Card className="w-full mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-gray-500" />
+            <span>Referrals</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-6">
+            <div className="animate-pulse h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="w-full mt-6">

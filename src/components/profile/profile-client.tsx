@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { UserProfile } from "@/types/health-metrics";
 import { saveUserProfile, generateAndSaveReferralCode } from "@/app/actions/health-actions";
 import { UserIcon, RulerIcon, ScaleIcon, CalendarIcon, ActivityIcon, LogOutIcon, SettingsIcon, BellIcon, HeartIcon, BadgeIcon, Users } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { ReferralSection } from "@/components/health-tracker/referral-section";
+import { StandaloneReferral } from "@/components/health-tracker/standalone-referral";
 import { toast } from "sonner";
 
 interface ProfileClientProps {
@@ -104,9 +105,17 @@ export function ProfileClient({ userId, user, initialProfile }: ProfileClientPro
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center space-y-4">
-                <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden relative">
                   {user?.image ? (
-                    <img src={user.image} alt="Profile" className="h-full w-full object-cover" />
+                    <Image 
+                      src={user.image} 
+                      alt="Profile" 
+                      fill 
+                      sizes="96px"
+                      className="object-cover" 
+                      priority
+                      unoptimized={false}
+                    />
                   ) : (
                     <UserIcon className="h-12 w-12 text-primary" />
                   )}
@@ -340,19 +349,7 @@ export function ProfileClient({ userId, user, initialProfile }: ProfileClientPro
               </div>
 
               {/* Referral Section */}
-              <ReferralSection 
-                profile={profile} 
-                onUpdateProfile={async (updatedProfile) => {
-                  try {
-                    await saveUserProfile(updatedProfile);
-                    setProfile(updatedProfile);
-                    toast.success("Profile updated with referral information");
-                  } catch (error) {
-                    console.error("Failed to update profile with referral info:", error);
-                    toast.error("Failed to update profile");
-                  }
-                }} 
-              />
+              <StandaloneReferral userId={userId} />
             </CardContent>
           </Card>
         </div>

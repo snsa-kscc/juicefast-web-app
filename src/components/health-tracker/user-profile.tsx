@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User } from "lucide-react";
-import { ReferralSection } from "./referral-section";
+import { StandaloneReferral } from "./standalone-referral";
 
 interface UserProfileProps {
+  userId: string;
   profile: UserProfileType | null;
   onUpdateProfile: (profile: UserProfileType) => void;
 }
 
-export function UserProfile({ profile, onUpdateProfile }: UserProfileProps) {
+export function UserProfile({ userId, profile, onUpdateProfile }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(!profile);
   const [height, setHeight] = useState(profile?.height || 170);
   const [weight, setWeight] = useState(profile?.weight || 70);
@@ -183,7 +184,7 @@ export function UserProfile({ profile, onUpdateProfile }: UserProfileProps) {
       </Card>
       
       {/* Add the Referral Section */}
-      <ReferralSection profile={profile} onUpdateProfile={onUpdateProfile} />
+      <StandaloneReferral userId={userId} />
     </>
   );
 }
