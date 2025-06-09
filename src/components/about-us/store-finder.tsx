@@ -31,10 +31,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StoreFinderProps {
-  initialStores: StoreLocation[];
+  initialStores?: StoreLocation[];
 }
 
-export function StoreFinder({ initialStores }: StoreFinderProps) {
+export function StoreFinder({ initialStores = [] }: StoreFinderProps) {
   const [stores, setStores] = useState<StoreLocation[]>(initialStores);
   const [filteredStores, setFilteredStores] = useState<StoreLocation[]>(initialStores);
   const [searchTerm, setSearchTerm] = useState("");

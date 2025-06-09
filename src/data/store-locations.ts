@@ -28,8 +28,9 @@ export interface StoreLocation {
 // Function to fetch store locations from the API
 export async function fetchStoreLocations(): Promise<StoreLocation[]> {
   try {
+    // Use next.js recommended data fetching pattern with revalidation
     const response = await fetch('https://staging2.juicefastc12.sg-host.com/wp-json/store-locator/v1/stores', {
-      cache: 'no-store' // Don't cache the response to ensure fresh data
+      next: { revalidate: 3600 } // Revalidate data every hour (3600 seconds)
     });
     
     if (!response.ok) {
