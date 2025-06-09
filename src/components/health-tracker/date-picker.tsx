@@ -64,7 +64,7 @@ export function DatePicker({ selectedDate, onDateChange, userId }: DatePickerPro
     // Don't allow selecting future dates
     const today = new Date();
     today.setHours(23, 59, 59, 999); // End of today
-    
+
     if (nextDay <= today) {
       onDateChange(nextDay);
       // Close the calendar if it's open
@@ -87,15 +87,14 @@ export function DatePicker({ selectedDate, onDateChange, userId }: DatePickerPro
     return availableDates.some((d) => isSameDay(d, date));
   };
 
-  // We'll use modifiers instead of a custom day renderer to highlight dates with data
+  // We'll use a function matcher instead of an array of dates
   const modifiers = {
-    hasData: availableDates,
+    hasData: (date: Date) => hasDataForDate(date),
   };
 
+  // Define styles for the modifiers
   const modifiersStyles = {
-    hasData: {
-      fontWeight: "bold",
-    },
+    hasData: { fontWeight: "bold", color: "#3b82f6" },
   };
 
   // Don't render anything on the server to avoid hydration issues
