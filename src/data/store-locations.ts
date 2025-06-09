@@ -1,4 +1,17 @@
 // Store location data for the store finder feature
+export interface ApiStoreLocation {
+  title: string;
+  street: string;
+  city: string;
+  postal_code: string;
+  lat: number;
+  lng: number;
+  phone: string;
+  email: string;
+  open_hours: string;
+}
+
+// Interface for our application's store location format
 export interface StoreLocation {
   id: string;
   name: string;
@@ -12,8 +25,69 @@ export interface StoreLocation {
   lng: number;
 }
 
-// Sample store data for Croatia
-export const STORE_LOCATIONS: StoreLocation[] = [
+// Function to fetch store locations from the API
+export async function fetchStoreLocations(): Promise<StoreLocation[]> {
+  try {
+    const response = await fetch('https://staging2.juicefastc12.sg-host.com/wp-json/store-locator/v1/stores', {
+      cache: 'no-store' // Don't cache the response to ensure fresh data
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch store locations: ${response.status}`);
+    }
+    
+    const apiStores: ApiStoreLocation[] = await response.json();
+    
+    // Transform API response to our application's format
+    return apiStores.map((store, index) => {
+      // Parse open_hours if it's a JSON string
+      let formattedHours = "Hours not available";
+      try {
+        const hoursObj = JSON.parse(store.open_hours);
+        const daysMap: Record<string, string> = {
+          mon: "Monday",
+          tue: "Tuesday",
+          wed: "Wednesday",
+          thu: "Thursday",
+          fri: "Friday",
+          sat: "Saturday",
+          sun: "Sunday"
+        };
+        
+        // Format hours - if all values are "0", display as "Open 24/7"
+        const allZero = Object.values(hoursObj).every(val => val === "0");
+        if (allZero) {
+          formattedHours = "Open 24/7";
+        } else {
+          formattedHours = Object.entries(hoursObj)
+            .map(([day, hours]) => `${daysMap[day]}: ${hours || 'Closed'}`)
+            .join(', ');
+        }
+      } catch (e) {
+        console.error("Error parsing hours:", e);
+      }
+      
+      return {
+        id: `store${index + 1}`,
+        name: store.title,
+        address: store.street,
+        city: store.city,
+        state: "", // API doesn't provide state
+        zipCode: store.postal_code,
+        phone: store.phone,
+        hours: formattedHours,
+        lat: store.lat,
+        lng: store.lng
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching store locations:', error);
+    return []; // Return empty array in case of error
+  }
+}
+
+// Fallback store data in case API fails
+export const FALLBACK_STORE_LOCATIONS: StoreLocation[] = [
   {
     id: "store1",
     name: "Split Health Center",
@@ -25,53 +99,5 @@ export const STORE_LOCATIONS: StoreLocation[] = [
     hours: "Mon-Fri: 8am-8pm, Sat: 9am-3pm, Sun: Closed",
     lat: 43.5147,
     lng: 16.4435,
-  },
-  {
-    id: "store2",
-    name: "Riva Nutrition Store",
-    address: "Obala Hrvatskog narodnog preporoda 12",
-    city: "Split",
-    state: "Splitsko-dalmatinska",
-    zipCode: "21000",
-    phone: "+385 21 555 789",
-    hours: "Mon-Sat: 9am-9pm, Sun: 10am-6pm",
-    lat: 43.5081,
-    lng: 16.4402,
-  },
-  {
-    id: "store3",
-    name: "Zagreb Wellness Hub",
-    address: "Ilica 152",
-    city: "Zagreb",
-    state: "Grad Zagreb",
-    zipCode: "10000",
-    phone: "+385 1 555 234",
-    hours: "Mon-Fri: 7am-9pm, Sat-Sun: 9am-7pm",
-    lat: 45.815,
-    lng: 15.9819,
-  },
-  {
-    id: "store4",
-    name: "Healthy Corner Zagreb",
-    address: "Maksimirska 123",
-    city: "Zagreb",
-    state: "Grad Zagreb",
-    zipCode: "10000",
-    phone: "+385 1 555 432",
-    hours: "Mon-Sun: 8am-8pm",
-    lat: 45.8173,
-    lng: 16.0054,
-  },
-  {
-    id: "store5",
-    name: "Rijeka Nutrition Center",
-    address: "Korzo 22",
-    city: "Rijeka",
-    state: "Primorsko-goranska",
-    zipCode: "51000",
-    phone: "+385 51 555 678",
-    hours: "Mon-Fri: 8am-8pm, Sat: 9am-6pm, Sun: Closed",
-    lat: 45.3271,
-    lng: 14.4422,
-  },
+  }
 ];

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { STORE_LOCATIONS, StoreLocation } from "@/data/store-locations";
+import { StoreLocation } from "@/data/store-locations";
 
 // Set Mapbox access token globally
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
@@ -30,9 +30,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function StoreFinder() {
-  const [stores, setStores] = useState<StoreLocation[]>(STORE_LOCATIONS);
-  const [filteredStores, setFilteredStores] = useState<StoreLocation[]>(STORE_LOCATIONS);
+interface StoreFinderProps {
+  initialStores: StoreLocation[];
+}
+
+export function StoreFinder({ initialStores }: StoreFinderProps) {
+  const [stores, setStores] = useState<StoreLocation[]>(initialStores);
+  const [filteredStores, setFilteredStores] = useState<StoreLocation[]>(initialStores);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedStore, setSelectedStore] = useState<StoreLocation | null>(null);
@@ -49,7 +53,7 @@ export function StoreFinder() {
       );
     }
 
-    if (selectedState) {
+    if (selectedState && selectedState !== "all") {
       filtered = filtered.filter((store) => store.state === selectedState);
     }
 
@@ -146,7 +150,9 @@ export function StoreFinder() {
   }, [selectedStore, filteredStores]);
 
   // Get unique states for the filter
-  const uniqueStates = [...new Set(stores.map((store) => store.state))];
+  const uniqueStates = [...new Set(stores.map((store) => store.state))]
+    .filter((state) => state && state.trim() !== "") // Filter out empty states
+    .sort();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -164,17 +170,23 @@ export function StoreFinder() {
 
             <div className="space-y-2">
               <Label htmlFor="state">Filter by State</Label>
-              <Select value={selectedState || "all"} onValueChange={(value) => setSelectedState(value === "all" ? "" : value)}>
+              <Select value={selectedState || "all"} onValueChange={(value) => setSelectedState(value)}>
                 <SelectTrigger id="state">
                   <SelectValue placeholder="All States" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All States</SelectItem>
-                  {uniqueStates.map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
+                  {uniqueStates.length > 0 ? (
+                    uniqueStates.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-states" disabled>
+                      No states available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
