@@ -112,6 +112,30 @@ export function SignupForm({ className, ...props }: React.ComponentPropsWithoutR
               >
                 Sign Up with Google
               </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await authClient.signIn.social({
+                    provider: "facebook",
+                    callbackURL: "/onboarding",
+                  });
+                }}
+              >
+                Sign Up with Facebook
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await authClient.signIn.social({
+                    provider: "apple",
+                    callbackURL: "/onboarding",
+                  });
+                }}
+              >
+                Sign Up with Apple
+              </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}

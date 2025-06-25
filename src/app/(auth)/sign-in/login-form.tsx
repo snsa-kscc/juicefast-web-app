@@ -74,6 +74,30 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               >
                 Login with Google
               </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await authClient.signIn.social({
+                    provider: "facebook",
+                    callbackURL: "/onboarding",
+                  });
+                }}
+              >
+                Login with Facebook
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={async () => {
+                  await authClient.signIn.social({
+                    provider: "apple",
+                    callbackURL: "/onboarding",
+                  });
+                }}
+              >
+                Login with Apple
+              </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
