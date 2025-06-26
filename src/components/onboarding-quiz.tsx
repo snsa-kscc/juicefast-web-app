@@ -10,7 +10,7 @@ import { quizQuestions } from "@/data/quiz-questions";
 
 export type QuizAnswer = {
   questionId: string;
-  answer: string | string[];
+  answer: string | string[] | number;
 };
 
 interface OnboardingQuizProps {
@@ -27,15 +27,29 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
     setCurrentStep(1);
   };
 
-  const isAnswerValid = (question: any, answer: string | string[]) => {
+  const handleSkip = () => {
+    if (onComplete) {
+      onComplete();
+    } else {
+      router.push("/");
+    }
+  };
+
+  const isAnswerValid = (question: any, answer: string | string[] | number) => {
     if (!question) return false;
+    
     if (question.type === "multiple") {
       return Array.isArray(answer) && answer.length > 0;
     }
+    
+    if (question.type === "slider") {
+      return typeof answer === "number";
+    }
+    
     return !!answer && (typeof answer !== "string" || answer.trim() !== "");
   };
 
-  const handleNext = (questionId: string, answer: string | string[]) => {
+  const handleNext = (questionId: string, answer: string | string[] | number) => {
     const questionIndex = currentStep - 1;
     const question = quizQuestions[questionIndex];
     if (!isAnswerValid(question, answer)) {
@@ -66,11 +80,6 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
     setAnswers([]);
   };
 
-  const handleAbort = () => {
-    // Navigate back to the home page
-    router.push("/");
-  };
-
   const handleComplete = () => {
     // Call the onComplete callback if provided
     if (onComplete) {
@@ -84,12 +93,21 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
   // Render the appropriate step
   const renderStep = () => {
     if (currentStep === 0) {
-      return <QuizStart onStart={handleStart} onAbort={handleAbort} />;
+      return <QuizStart onStart={handleStart} onSkip={handleSkip} />;
     } else if (currentStep === totalSteps - 1) {
-      return <QuizComplete answers={answers} onReset={handleReset} onAbort={handleAbort} onComplete={handleComplete} />;
+      return <QuizComplete answers={answers} onReset={handleReset} onSkip={handleSkip} onComplete={handleComplete} />;
     } else {
       const questionIndex = currentStep - 1;
       const question = quizQuestions[questionIndex];
+      
+      // Make sure question has the correct questionNumber and totalQuestions
+      if (!question.questionNumber) {
+        question.questionNumber = questionIndex + 1;
+      }
+      if (!question.totalQuestions) {
+        question.totalQuestions = quizQuestions.length;
+      }
+      
       const existingAnswer = answers.find((a) => a.questionId === question.id);
 
       return (
@@ -98,7 +116,7 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
           currentAnswer={existingAnswer?.answer}
           onNext={handleNext}
           onPrevious={handlePrevious}
-          onAbort={handleAbort}
+          onSkip={handleSkip}
           showPrevious={currentStep > 1}
         />
       );
@@ -106,11 +124,9 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <QuizProgress currentStep={currentStep} totalSteps={totalSteps} />
-      </div>
-      <div className="bg-white rounded-lg border p-6">{renderStep()}</div>
+    <div className="w-full">
+      {/* We no longer need the progress bar here since it's included in the QuizQuestion component */}
+      {renderStep()}
     </div>
   );
 }

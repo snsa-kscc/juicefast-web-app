@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     // Check if the user has already completed onboarding
     const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
-    
+
     if (hasCompletedOnboarding === "true") {
       // If onboarding is completed, redirect to dashboard
       router.push("/dashboard");
@@ -27,9 +27,5 @@ export default function Home() {
     router.push("/dashboard");
   };
 
-  return (
-    <main className="container mx-auto py-10 px-4 md:px-6">
-      {showQuiz && <OnboardingQuiz onComplete={handleOnboardingComplete} />}
-    </main>
-  );
+  return <main className="container mx-auto py-10 px-4 md:px-6">{showQuiz && <OnboardingQuiz onComplete={handleOnboardingComplete} />}</main>;
 }
