@@ -19,15 +19,31 @@ interface QuizQuestionProps {
 }
 
 export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSkip, showPrevious }: QuizQuestionProps) {
+  // Use a key to force component re-mount when question changes
+  const questionKey = question.id;
+
   const [answer, setAnswer] = useState<string | string[] | number>(() => {
-    if (currentAnswer !== undefined) return currentAnswer;
+    if (currentAnswer !== undefined) {
+      // Ensure slider questions always have a numeric answer
+      if (question.type === "slider" && typeof currentAnswer !== "number") {
+        return question.min || 0;
+      }
+      // For multiple choice, ensure we have an array
+      if (question.type === "multiple" && !Array.isArray(currentAnswer)) {
+        return [];
+      }
+      return currentAnswer;
+    }
     if (question.type === "multiple") return [];
     if (question.type === "slider") return question.min || 0;
     return "";
   });
 
   const handleNext = () => {
-    onNext(question.id, answer);
+    // Only proceed if the answer is valid
+    if (isAnswerValid()) {
+      onNext(question.id, answer);
+    }
   };
 
   const handleSingleChoice = (value: string) => {
@@ -39,17 +55,29 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
     if (currentAnswers.includes(value)) {
       setAnswer(currentAnswers.filter((a) => a !== value));
     } else {
+      // Check if we've reached the maximum number of selections
+      if (question.maxSelections && currentAnswers.length >= question.maxSelections) {
+        // If we've reached the limit, don't add the new selection
+        return;
+      }
       setAnswer([...currentAnswers, value]);
     }
   };
 
   const isAnswerValid = () => {
     if (question.type === "multiple") {
+      // For multiple choice questions, ensure at least one option is selected
       return Array.isArray(answer) && answer.length > 0;
     }
+    if (question.type === "single") {
+      // For single choice questions, ensure an option is selected
+      return !!answer && answer !== "";
+    }
     if (question.type === "slider") {
+      // For slider questions, ensure it's a number
       return typeof answer === "number";
     }
+    // For text and input questions, ensure non-empty string
     return !!answer && (typeof answer !== "string" || answer.trim() !== "");
   };
 
@@ -119,7 +147,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                     key={option.value}
                     variant={answer === option.value ? "default" : "outline"}
                     onClick={() => handleSingleChoice(option.value)}
-                    className={`w-full h-14 justify-start text-left rounded-full font-medium transition-all ${
+                    className={`w-full h-14 justify-start text-left rounded-lg transition-all ${
                       answer === option.value ? "bg-[#11B364] text-white border-[#11B364] hover:bg-[#0ea55a]" : "bg-white border-gray-200 hover:bg-gray-50"
                     }`}
                   >
@@ -143,7 +171,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                       key={option.value}
                       variant={isSelected ? "default" : "outline"}
                       onClick={() => handleMultipleChoice(option.value)}
-                      className={`w-full h-14 justify-start text-left rounded-full font-medium transition-all ${
+                      className={`w-full h-14 justify-start text-left rounded-lg transition-all ${
                         isSelected ? "bg-[#11B364] text-white border-[#11B364] hover:bg-[#0ea55a]" : "bg-white border-gray-200 hover:bg-gray-50"
                       }`}
                     >
@@ -185,8 +213,8 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <div className="text-center mb-4">
                     <div className="inline-block bg-[#E7F6EF] px-6 py-2 rounded-md">
-                      <span className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Inter, sans-serif" }}>
-                        {answer} <span className="text-lg">{question.unit}</span>
+                      <span className="text-2xl font-bold text-[#1A1A1A]">
+                        {typeof answer === "number" ? answer : question.min || 0} <span className="text-lg">{question.unit}</span>
                       </span>
                     </div>
                   </div>
@@ -199,7 +227,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                       step={question.step || 1}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-sm text-gray-500 mt-2" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <div className="flex justify-between text-sm text-gray-500 mt-2">
                       <span>
                         {question.min} {question.unit}
                       </span>
@@ -213,18 +241,19 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
             )}
 
             {/* Next button */}
-            <div className="pt-6">
+            <div className="pt-6 flex flex-col items-center justify-center">
               <Button
                 onClick={handleNext}
                 disabled={!isAnswerValid()}
-                className="w-full h-14 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-14 px-14 bg-[#1A1A1A] hover:bg-black text-white rounded-full font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="next-question-button"
               >
                 {question.nextButtonText || "Continue"}
               </Button>
 
               {/* Skip link */}
               <div className="text-center mt-4">
-                <button onClick={onSkip} className="text-sm text-gray-500 hover:text-gray-700 font-medium">
+                <button onClick={onSkip} className="text-sm text-gray-900 underline hover:text-gray-500 font-medium">
                   Skip onboarding
                 </button>
               </div>

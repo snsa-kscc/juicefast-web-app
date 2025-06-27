@@ -39,21 +39,31 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
     if (!question) return false;
     
     if (question.type === "multiple") {
+      // For multiple choice questions, ensure at least one option is selected
       return Array.isArray(answer) && answer.length > 0;
     }
     
+    if (question.type === "single") {
+      // For single choice questions, ensure an option is selected
+      return !!answer && answer !== "";
+    }
+    
     if (question.type === "slider") {
+      // For slider questions, ensure it's a number
       return typeof answer === "number";
     }
     
+    // For text and input questions, ensure non-empty string
     return !!answer && (typeof answer !== "string" || answer.trim() !== "");
   };
 
   const handleNext = (questionId: string, answer: string | string[] | number) => {
     const questionIndex = currentStep - 1;
     const question = quizQuestions[questionIndex];
+    
+    // Strict validation - do not advance if answer is invalid
     if (!isAnswerValid(question, answer)) {
-      // Do not advance if answer is invalid
+      console.log('Invalid answer detected in parent component:', { questionId, answer });
       return;
     }
     // Save the answer
@@ -112,6 +122,7 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
 
       return (
         <QuizQuestion
+          key={`question-${question.id}`} // Add key to force re-mount when question changes
           question={question}
           currentAnswer={existingAnswer?.answer}
           onNext={handleNext}
