@@ -127,11 +127,16 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
           <div className="px-8 pb-4 border-b border-gray-100">
             <p className="text-sm text-gray-500">
               Question {question.questionNumber}/{question.totalQuestions}
-              {question.type === "multiple" && question.maxSelections && (
+              {question.type !== "slider" && (
                 <>
                   {" "}
-                  - pick {question.maxSelections === 1 ? "1" : question.maxSelections > 1 ? `up to ${question.maxSelections}` : ""}{" "}
-                  {question.maxSelections === 1 ? "answer" : "answers"}
+                  {question.type === "single" && <>- pick one answer</>}
+                  {question.type === "multiple" && question.maxSelections && (
+                    <>
+                      - pick {question.maxSelections === 1 ? "one" : `up to ${question.maxSelections}`} {question.maxSelections === 1 ? "answer" : "answers"}
+                    </>
+                  )}
+                  {question.type === "multiple" && !question.maxSelections && <>- pick all that apply</>}
                   {question.description?.includes("most present") ? " that are the most present" : ""}
                 </>
               )}

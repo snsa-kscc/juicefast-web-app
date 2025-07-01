@@ -20,7 +20,7 @@ export const quizQuestions: QuizQuestionType[] = [
     id: "goal",
     type: "multiple",
     title: "What's your goal right now?",
-    description: "I want to....",
+    description: "I want to...",
     questionNumber: 1,
     totalQuestions: 13,
     maxSelections: 3,
@@ -67,7 +67,6 @@ export const quizQuestions: QuizQuestionType[] = [
     questionNumber: 4,
     totalQuestions: 13,
     maxSelections: 2,
-    description: "pick up to 2 answers that are the most present",
     options: [
       { value: "energized", label: "Energized 😊" },
       { value: "tired", label: "A bit tired 😊" },
@@ -85,7 +84,6 @@ export const quizQuestions: QuizQuestionType[] = [
     questionNumber: 5,
     totalQuestions: 13,
     maxSelections: 2,
-    description: "pick 1 or 2 answers",
     options: [
       { value: "balanced", label: "Pretty balanced" },
       { value: "chaotic", label: "Bit chaotic" },
@@ -101,7 +99,6 @@ export const quizQuestions: QuizQuestionType[] = [
     title: "How much water you drink daily?",
     questionNumber: 6,
     totalQuestions: 13,
-    description: "pick 1 answer",
     options: [
       { value: "less_than_1l", label: "Less than 1L" },
       { value: "1_2l", label: "1-2L" },
@@ -116,7 +113,6 @@ export const quizQuestions: QuizQuestionType[] = [
     title: "How much time you get for yourself daily?",
     questionNumber: 7,
     totalQuestions: 13,
-    description: "pick 1 answer",
     options: [
       { value: "none", label: "None" },
       { value: "less_than_10", label: "Less than 10 minutes" },
@@ -131,7 +127,6 @@ export const quizQuestions: QuizQuestionType[] = [
     title: "Do you use any supplements?",
     questionNumber: 8,
     totalQuestions: 13,
-    description: "pick 1 answer",
     options: [
       { value: "regularly", label: "Yes, regularly" },
       { value: "sometimes", label: "Sometimes" },
@@ -178,7 +173,6 @@ export const quizQuestions: QuizQuestionType[] = [
     title: "How often do you move?",
     questionNumber: 11,
     totalQuestions: 13,
-    description: "pick 1 answer",
     options: [
       { value: "daily", label: "Every day" },
       { value: "few_times", label: "Few times a week" },
@@ -193,7 +187,6 @@ export const quizQuestions: QuizQuestionType[] = [
     title: "Do you do any of these activities?",
     questionNumber: 12,
     totalQuestions: 13,
-    description: "multi answer",
     options: [
       { value: "meditation", label: "Meditation" },
       { value: "yoga", label: "Yoga" },
@@ -210,7 +203,6 @@ export const quizQuestions: QuizQuestionType[] = [
     title: "Any allergies or dietary preferences?",
     questionNumber: 13,
     totalQuestions: 13,
-    description: "multi select",
     options: [
       { value: "nuts", label: "Nuts" },
       { value: "gluten", label: "Gluten" },
