@@ -19,9 +19,6 @@ interface QuizQuestionProps {
 }
 
 export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSkip, showPrevious }: QuizQuestionProps) {
-  // Use a key to force component re-mount when question changes
-  const questionKey = question.id;
-
   const [answer, setAnswer] = useState<string | string[] | number>(() => {
     if (currentAnswer !== undefined) {
       // Ensure slider questions always have a numeric answer
@@ -104,7 +101,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
 
         {/* Progress bar */}
         <div className="flex-1 ml-4 mr-4">
-          <div className="h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
+          <div className="h-2 bg-white rounded-full overflow-hidden">
             <div
               className="h-full bg-[#11B364] rounded-full"
               style={{
@@ -115,35 +112,38 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-6 pb-6">
-        <Card className="w-full max-w-md border-none shadow-none bg-white rounded-3xl">
-          <CardHeader className="text-center space-y-3 pb-4 pt-8">
-            <CardTitle className="text-3xl font-bold leading-tight text-[#1A1A1A]">{question.title}</CardTitle>
-            {question.description && <CardDescription className="text-base text-gray-600 leading-relaxed">{question.description}</CardDescription>}
-          </CardHeader>
+      {/* Title and Description - outside the card */}
+      <div className="relative z-10 flex flex-col items-center justify-center px-6 pt-4 pb-6">
+        <div className="text-center space-y-3 mb-6 max-w-md">
+          <h2 className="text-3xl font-bold leading-tight text-[#1A1A1A]">{question.title}</h2>
+          {question.description && <p className="text-base text-[#1A1A1A] leading-relaxed">{question.description}</p>}
+        </div>
 
-          {/* Question indicator */}
-          <div className="px-8 pb-4 border-b border-gray-100">
-            <p className="text-sm text-gray-500">
-              Question {question.questionNumber}/{question.totalQuestions}
-              {question.type !== "slider" && (
-                <>
-                  {" "}
-                  {question.type === "single" && <>- pick one answer</>}
-                  {question.type === "multiple" && question.maxSelections && (
-                    <>
-                      - pick {question.maxSelections === 1 ? "one" : `up to ${question.maxSelections}`} {question.maxSelections === 1 ? "answer" : "answers"}
-                    </>
-                  )}
-                  {question.type === "multiple" && !question.maxSelections && <>- pick all that apply</>}
-                  {question.description?.includes("most present") ? " that are the most present" : ""}
-                </>
-              )}
-            </p>
-          </div>
+        {/* Main content - white card */}
+        <Card className="w-full max-w-md border-none bg-white rounded-3xl">
+          <CardContent className="p-6">
+            {/* Question indicator */}
+            <div className="pb-4">
+              <p className="text-sm text-[#1A1A1A]">
+                Question {question.questionNumber}/{question.totalQuestions}
+                {question.type !== "slider" && (
+                  <>
+                    {" "}
+                    {question.type === "single" && <>- pick one answer</>}
+                    {question.type === "multiple" && question.maxSelections && (
+                      <>
+                        - pick {question.maxSelections === 1 ? "one" : `up to ${question.maxSelections}`} {question.maxSelections === 1 ? "answer" : "answers"}
+                      </>
+                    )}
+                    {question.type === "multiple" && !question.maxSelections && <>- pick all that apply</>}
+                    {question.description?.includes("most present") ? " that are the most present" : ""}
+                  </>
+                )}
+              </p>
+            </div>
 
-          <CardContent className="space-y-4 pt-4">
+            {/* Horizontal divider */}
+            <div className="border-b border-gray-100 mb-6"></div>
             {/* Single choice options */}
             {question.type === "single" && question.options && (
               <div className="space-y-3">
@@ -197,7 +197,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                 placeholder={question.placeholder || "Type your answer..."}
                 value={typeof answer === "string" ? answer : ""}
                 onChange={(e) => setAnswer(e.target.value)}
-                className="min-h-[120px] rounded-xl border-gray-200 bg-white resize-none"
+                className="min-h-[120px] rounded-lg border-gray-200 bg-white resize-none"
               />
             )}
 
@@ -207,7 +207,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                 placeholder={question.placeholder || "Enter your answer"}
                 value={typeof answer === "string" ? answer : ""}
                 onChange={(e) => setAnswer(e.target.value)}
-                className="h-12 rounded-xl border-gray-200 bg-white"
+                className="h-12 rounded-lg border-gray-200 bg-white"
               />
             )}
 
@@ -215,7 +215,7 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
             {question.type === "slider" && (
               <div className="space-y-6">
                 {/* Custom weight slider UI */}
-                <div className="bg-gray-50 p-4 rounded-xl">
+                <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-center mb-4">
                     <div className="inline-block bg-[#E7F6EF] px-6 py-2 rounded-md">
                       <span className="text-2xl font-bold text-[#1A1A1A]">
@@ -244,7 +244,8 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                 </div>
               </div>
             )}
-
+            {/*horizontal divider*/}
+            <div className="border-b border-gray-100 my-6"></div>
             {/* Next button */}
             <div className="pt-6 flex flex-col items-center justify-center">
               <Button

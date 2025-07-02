@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { QuizStart } from "./quiz/quiz-start";
 import { QuizQuestion } from "./quiz/quiz-question";
 import { QuizComplete } from "./quiz/quiz-complete";
-import { QuizProgress } from "./quiz/quiz-progress";
 import { quizQuestions } from "@/data/quiz-questions";
 
 export type QuizAnswer = {
@@ -37,22 +36,22 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
 
   const isAnswerValid = (question: any, answer: string | string[] | number) => {
     if (!question) return false;
-    
+
     if (question.type === "multiple") {
       // For multiple choice questions, ensure at least one option is selected
       return Array.isArray(answer) && answer.length > 0;
     }
-    
+
     if (question.type === "single") {
       // For single choice questions, ensure an option is selected
       return !!answer && answer !== "";
     }
-    
+
     if (question.type === "slider") {
       // For slider questions, ensure it's a number
       return typeof answer === "number";
     }
-    
+
     // For text and input questions, ensure non-empty string
     return !!answer && (typeof answer !== "string" || answer.trim() !== "");
   };
@@ -60,10 +59,10 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
   const handleNext = (questionId: string, answer: string | string[] | number) => {
     const questionIndex = currentStep - 1;
     const question = quizQuestions[questionIndex];
-    
+
     // Strict validation - do not advance if answer is invalid
     if (!isAnswerValid(question, answer)) {
-      console.log('Invalid answer detected in parent component:', { questionId, answer });
+      console.log("Invalid answer detected in parent component:", { questionId, answer });
       return;
     }
     // Save the answer
@@ -109,7 +108,7 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
     } else {
       const questionIndex = currentStep - 1;
       const question = quizQuestions[questionIndex];
-      
+
       // Make sure question has the correct questionNumber and totalQuestions
       if (!question.questionNumber) {
         question.questionNumber = questionIndex + 1;
@@ -117,7 +116,7 @@ export function OnboardingQuiz({ onComplete }: OnboardingQuizProps) {
       if (!question.totalQuestions) {
         question.totalQuestions = quizQuestions.length;
       }
-      
+
       const existingAnswer = answers.find((a) => a.questionId === question.id);
 
       return (
