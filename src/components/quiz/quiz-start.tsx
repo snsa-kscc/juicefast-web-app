@@ -6,6 +6,8 @@ import BodyFigure from "@/components/shapes/body-figure";
 import Scale from "@/components/shapes/scale";
 import Star from "@/components/shapes/star";
 import Dumbbell from "@/components/shapes/dumbbell";
+import Image from "next/image";
+import logo from "../../../public/jf-pictogram.png";
 
 interface QuizStartProps {
   onStart: () => void;
@@ -23,7 +25,7 @@ export function QuizStart({ onStart, onSkip }: QuizStartProps) {
         <CardHeader className="text-center space-y-6 pt-12 pb-6 px-8">
           {/* App logo */}
           <div className="mx-auto w-20 h-20 bg-[#1A1A1A] rounded-2xl flex items-center justify-center mb-6">
-            <div className="text-white font-bold text-3xl">J</div>
+            <Image src={logo} alt="juicefast" width={65} height={65} />
           </div>
 
           <div className="space-y-2">
