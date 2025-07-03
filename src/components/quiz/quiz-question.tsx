@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Circle, CheckCircle2 } from "lucide-react";
 import type { QuizQuestionType } from "@/data/quiz-questions";
 
 interface QuizQuestionProps {
@@ -144,29 +144,34 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
 
             {/* Horizontal divider */}
             <div className="border-b border-gray-100 mb-6"></div>
-            {/* Single choice options */}
+            {/* Single choice options with radio buttons */}
             {question.type === "single" && question.options && (
               <div className="space-y-3">
-                {question.options.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={answer === option.value ? "default" : "outline"}
-                    onClick={() => handleSingleChoice(option.value)}
-                    className={`w-full h-14 justify-start text-left rounded-lg transition-all ${
-                      answer === option.value ? "bg-[#11B364] text-white border-[#11B364] hover:bg-[#0ea55a]" : "bg-white border-gray-200 hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {option.icon && <span className="text-xl">{option.icon}</span>}
-                      <span>{option.label}</span>
-                      {answer === option.value && <Check className="h-4 w-4 ml-auto" />}
-                    </div>
-                  </Button>
-                ))}
+                {question.options.map((option) => {
+                  const isSelected = answer === option.value;
+                  return (
+                    <Button
+                      key={option.value}
+                      variant="outline"
+                      onClick={() => handleSingleChoice(option.value)}
+                      className={`w-full h-14 justify-start text-left rounded-lg transition-all ${
+                        isSelected ? "border-[#11B364] hover:bg-gray-50" : "bg-white border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 w-full">
+                        <div className={`flex-shrink-0 h-5 w-5 rounded-full border ${isSelected ? "border-[#11B364] text-[#11B364]" : "border-gray-300"} flex items-center justify-center`}>
+                          {isSelected && <Circle className="h-2.5 w-2.5 fill-current" />}
+                        </div>
+                        {option.icon && <span className="text-xl">{option.icon}</span>}
+                        <span className={`${isSelected ? "text-[#11B364] font-medium" : ""}`}>{option.label}</span>
+                      </div>
+                    </Button>
+                  );
+                })}
               </div>
             )}
 
-            {/* Multiple choice options */}
+            {/* Multiple choice options with checkboxes */}
             {question.type === "multiple" && question.options && (
               <div className="space-y-3">
                 {question.options.map((option) => {
@@ -174,16 +179,18 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                   return (
                     <Button
                       key={option.value}
-                      variant={isSelected ? "default" : "outline"}
+                      variant="outline"
                       onClick={() => handleMultipleChoice(option.value)}
                       className={`w-full h-14 justify-start text-left rounded-lg transition-all ${
-                        isSelected ? "bg-[#11B364] text-white border-[#11B364] hover:bg-[#0ea55a]" : "bg-white border-gray-200 hover:bg-gray-50"
+                        isSelected ? "border-[#11B364] hover:bg-gray-50" : "bg-white border-gray-200 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className={`flex-shrink-0 h-5 w-5 rounded-md border ${isSelected ? "border-[#11B364] bg-[#11B364] text-white" : "border-gray-300"} flex items-center justify-center`}>
+                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                        </div>
                         {option.icon && <span className="text-xl">{option.icon}</span>}
-                        <span>{option.label}</span>
-                        {isSelected && <Check className="h-4 w-4 ml-auto" />}
+                        <span className={`${isSelected ? "text-[#11B364] font-medium" : ""}`}>{option.label}</span>
                       </div>
                     </Button>
                   );
