@@ -68,7 +68,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             Forgot password?
           </Link>
 
-          <Button type="submit" className="h-12 rounded-full bg-[#1A1A1A] text-white hover:bg-gray-800" disabled={pending}>
+          <Button type="submit" className="h-12 rounded-full bg-[#1A1A1A] text-white hover:bg-gray-800 basis-1/2" disabled={pending}>
             {pending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

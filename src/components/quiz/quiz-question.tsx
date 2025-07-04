@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import { WheelPicker } from "@/components/ui/wheel-picker";
+import { DualWheelPicker } from "@/components/ui/dual-wheel-picker";
 import { ArrowLeft, Check, Circle, CheckCircle2 } from "lucide-react";
 import type { QuizQuestionType } from "@/data/quiz-questions";
 
@@ -159,7 +161,11 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                       }`}
                     >
                       <div className="flex items-center gap-3 w-full">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-full border ${isSelected ? "border-[#11B364] text-[#11B364]" : "border-gray-300"} flex items-center justify-center`}>
+                        <div
+                          className={`flex-shrink-0 h-5 w-5 rounded-full border ${
+                            isSelected ? "border-[#11B364] text-[#11B364]" : "border-gray-300"
+                          } flex items-center justify-center`}
+                        >
                           {isSelected && <Circle className="h-2.5 w-2.5 fill-current" />}
                         </div>
                         {option.icon && <span className="text-xl">{option.icon}</span>}
@@ -186,7 +192,11 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
                       }`}
                     >
                       <div className="flex items-center gap-3 w-full">
-                        <div className={`flex-shrink-0 h-5 w-5 rounded-md border ${isSelected ? "border-[#11B364] bg-[#11B364] text-white" : "border-gray-300"} flex items-center justify-center`}>
+                        <div
+                          className={`flex-shrink-0 h-5 w-5 rounded-md border ${
+                            isSelected ? "border-[#11B364] bg-[#11B364] text-white" : "border-gray-300"
+                          } flex items-center justify-center`}
+                        >
                           {isSelected && <Check className="h-3.5 w-3.5" />}
                         </div>
                         {option.icon && <span className="text-xl">{option.icon}</span>}
@@ -218,36 +228,67 @@ export function QuizQuestion({ question, currentAnswer, onNext, onPrevious, onSk
               />
             )}
 
-            {/* Slider input */}
+            {/* Slider input with appropriate picker based on unit type */}
             {question.type === "slider" && (
               <div className="space-y-6">
-                {/* Custom weight slider UI */}
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-center mb-4">
-                    <div className="inline-block bg-[#E7F6EF] px-6 py-2 rounded-md">
-                      <span className="text-2xl font-bold text-[#1A1A1A]">
-                        {typeof answer === "number" ? answer : question.min || 0} <span className="text-lg">{question.unit}</span>
-                      </span>
-                    </div>
+                  <div className="text-center mb-2">
+                    <div className="text-lg font-medium text-gray-500">Select your {question.title.toLowerCase()}</div>
                   </div>
-                  <div className="px-4">
-                    <Slider
-                      value={[typeof answer === "number" ? answer : question.min || 0]}
-                      onValueChange={(value) => setAnswer(value[0])}
-                      min={question.min || 0}
-                      max={question.max || 100}
-                      step={question.step || 1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-sm text-gray-500 mt-2">
-                      <span>
-                        {question.min} {question.unit}
-                      </span>
-                      <span>
-                        {question.max} {question.unit}
-                      </span>
+
+                  {/* Use dual wheel picker for weight in kg */}
+                  {question.unit === "kg" ? (
+                    <div className="px-4">
+                      <DualWheelPicker
+                        value={typeof answer === "number" ? answer * 1000 : (question.min || 0) * 1000}
+                        onChange={(value) => setAnswer(value / 1000)}
+                        minKg={question.min || 40}
+                        maxKg={question.max || 150}
+                        kgStep={question.step || 1}
+                        gramStep={100}
+                        unit="kg"
+                      />
                     </div>
-                  </div>
+                  ) : question.unit === "lbs" || question.unit === "cm" || question.unit === "ft" ? (
+                    /* Use single wheel picker for height and other weight units */
+                    <div className="px-4">
+                      <WheelPicker
+                        value={typeof answer === "number" ? answer : question.min || 0}
+                        onChange={(value) => setAnswer(value)}
+                        min={question.min || 0}
+                        max={question.max || 100}
+                        step={question.step || 1}
+                        unit={question.unit}
+                      />
+                    </div>
+                  ) : (
+                    /* Use regular slider for other measurements */
+                    <div className="px-4">
+                      <div className="text-center mb-4">
+                        <div className="inline-block bg-[#E7F6EF] px-6 py-2 rounded-md">
+                          <span className="text-2xl font-bold text-[#1A1A1A]">
+                            {typeof answer === "number" ? answer : question.min || 0} <span className="text-lg">{question.unit}</span>
+                          </span>
+                        </div>
+                      </div>
+                      <Slider
+                        value={[typeof answer === "number" ? answer : question.min || 0]}
+                        onValueChange={(value) => setAnswer(value[0])}
+                        min={question.min || 0}
+                        max={question.max || 100}
+                        step={question.step || 1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500 mt-2">
+                        <span>
+                          {question.min} {question.unit}
+                        </span>
+                        <span>
+                          {question.max} {question.unit}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
