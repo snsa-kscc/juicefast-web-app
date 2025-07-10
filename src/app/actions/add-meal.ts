@@ -39,8 +39,8 @@ export async function addMeal(formData: FormData): Promise<{ success: boolean; d
     });
 
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors
-        .map((err) => err.message)
+      const errorMessage = validationResult.error.issues
+        .map((issue) => issue.message)
         .join(", ");
       
       return {

@@ -14,8 +14,8 @@ export function validatedAction<S extends z.ZodType<any, any>, T>(schema: S, act
     const result = schema.safeParse(Object.fromEntries(formData));
     if (!result.success) {
       return {
-        error: result.error.errors[0].message,
-        validationErrors: result.error.errors,
+        error: result.error.issues[0].message,
+        validationErrors: result.error.issues,
         success: false,
       } as T;
     }
