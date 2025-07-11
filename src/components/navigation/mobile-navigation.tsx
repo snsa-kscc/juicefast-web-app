@@ -8,25 +8,29 @@ export function MobileNavigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-      <div className="grid h-16 grid-cols-6 mx-auto max-w-lg">
-        {NAVIGATION_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
-          const IconComponent = item.icon;
+    <nav className="fixed bottom-4 left-0 right-0 z-50">
+      <div className="mx-auto w-[90%] max-w-md rounded-[12px] overflow-hidden backdrop-blur-[10px] bg-white/40 border border-white/20 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.25)_inset,0px_2px_2px_0px_rgba(0,0,0,0.25)]">
+        <div className="flex h-16 justify-around items-center">
+          {NAVIGATION_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+            const IconComponent = item.icon;
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex flex-col items-center justify-center px-2 ${
-                isActive ? "text-primary" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-              }`}
-            >
-              <IconComponent className={`w-6 h-6 ${isActive ? "text-primary" : ""}`} />
-              <span className="text-xs mt-1">{item.name}</span>
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="flex flex-col items-center justify-center px-2"
+              >
+                <IconComponent 
+                  className={`w-5 h-5 ${isActive ? "text-primary" : "text-gray-600"}`} 
+                />
+                <span className={`text-[10px] mt-1 ${isActive ? "text-primary font-medium" : "text-gray-600"}`}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
