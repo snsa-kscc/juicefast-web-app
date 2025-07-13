@@ -8,7 +8,7 @@ export interface NavigationItem {
 }
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
-  { name: "Home", href: "/", icon: Home },
+  { name: "Home", href: "/dashboard", icon: Home },
   { name: "Tracker", href: "/tracker", icon: Activity },
   { name: "Store", href: "/stores", icon: Store },
   { name: "Chat", href: "/chat", icon: MessageCircle },

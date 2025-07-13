@@ -38,52 +38,100 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
       setMindfulnessEntries(initialMindfulnessData.mindfulness);
 
       // Calculate total minutes
-      const total = initialMindfulnessData.mindfulness.reduce(
-        (sum, entry) => sum + entry.minutes, 0
-      );
+      const total = initialMindfulnessData.mindfulness.reduce((sum, entry) => sum + entry.minutes, 0);
+
+      // Set the actual total minutes value
       setTotalMinutes(total);
-      setDisplayedMinutes(total);
-      previousValueRef.current = total;
+
+      // For initial animation, start from 0
+      setDisplayedMinutes(0);
+      previousValueRef.current = 0;
+
+      // Trigger animation manually once
+      const startAnimation = () => {
+        setAnimationInProgress(true);
+        const duration = 1500; // Animation duration in ms
+        const startTime = performance.now();
+
+        const animateCounter = (currentTime: number) => {
+          const elapsedTime = currentTime - startTime;
+          const progress = Math.min(elapsedTime / duration, 1);
+
+          // Easing function for smoother animation
+          const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+
+          const currentValue = Math.round(0 + (total - 0) * easeOutQuart);
+          setDisplayedMinutes(currentValue);
+
+          if (progress < 1) {
+            animationRef.current = requestAnimationFrame(animateCounter);
+          } else {
+            previousValueRef.current = total;
+            setAnimationInProgress(false);
+          }
+        };
+
+        animationRef.current = requestAnimationFrame(animateCounter);
+      };
+
+      // Delay the animation slightly to ensure component is fully mounted
+      const timeoutId = setTimeout(startAnimation, 300);
+
+      return () => {
+        clearTimeout(timeoutId);
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    } else {
+      // If no data, just set everything to 0
+      setMindfulnessEntries([]);
+      setTotalMinutes(0);
+      setDisplayedMinutes(0);
+      previousValueRef.current = 0;
     }
   }, [initialMindfulnessData]);
 
-  // Counter animation effect
+  // Counter animation effect for when minutes are added (not for initial load)
   useEffect(() => {
-    if (totalMinutes === displayedMinutes) return;
+    // Skip initial render and only animate when minutes are added
+    if (totalMinutes === displayedMinutes || totalMinutes === 0) return;
 
-    setAnimationInProgress(true);
-    const startValue = previousValueRef.current;
-    const endValue = totalMinutes;
-    const duration = 1000; // 1 second animation
-    const startTime = performance.now();
+    // Only animate if this is not the initial animation
+    if (previousValueRef.current !== 0 || displayedMinutes !== 0) {
+      setAnimationInProgress(true);
+      const startValue = previousValueRef.current;
+      const endValue = totalMinutes;
+      const duration = 1000; // 1 second animation
+      const startTime = performance.now();
 
-    const animateCounter = (currentTime: number) => {
-      const elapsedTime = currentTime - startTime;
-      const progress = Math.min(elapsedTime / duration, 1);
+      const animateCounter = (currentTime: number) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
 
-      // Easing function for smoother animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        // Easing function for smoother animation
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
 
-      const currentValue = startValue + (endValue - startValue) * easeOutQuart;
-      setDisplayedMinutes(Math.round(currentValue));
+        const currentValue = startValue + (endValue - startValue) * easeOutQuart;
+        setDisplayedMinutes(Math.round(currentValue));
 
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animateCounter);
-      } else {
-        setDisplayedMinutes(endValue);
-        previousValueRef.current = endValue;
-        setAnimationInProgress(false);
-      }
-    };
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animateCounter);
+        } else {
+          previousValueRef.current = endValue;
+          setAnimationInProgress(false);
+        }
+      };
 
-    animationRef.current = requestAnimationFrame(animateCounter);
+      animationRef.current = requestAnimationFrame(animateCounter);
 
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [totalMinutes, displayedMinutes]);
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [totalMinutes]);
 
   const handleAddMindfulness = async () => {
     if (minutes <= 0 || !userId || isLoading || animationInProgress) return;
@@ -94,9 +142,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
       const today = new Date();
       const dateKey = formatDateKey(today);
 
-      const activity = MINDFULNESS_TRACKER_CONFIG.meditationTypes.find(
-        (act: { id: string; label: string }) => act.id === selectedActivity
-      );
+      const activity = MINDFULNESS_TRACKER_CONFIG.meditationTypes.find((act: { id: string; label: string }) => act.id === selectedActivity);
 
       if (!activity) {
         throw new Error("Invalid activity selected");
@@ -105,7 +151,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
       const newEntry: MindfulnessEntry = {
         minutes: minutes,
         activity: selectedActivity,
-        timestamp: today
+        timestamp: today,
       };
 
       await addMindfulness(userId, today, newEntry);
@@ -127,33 +173,32 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
   const progressPercentage = Math.min(100, Math.round((displayedMinutes / dailyGoal) * 100));
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F0F7FF]">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="rounded-full bg-[#3B82F6] text-white hover:bg-[#2563EB] h-10 w-10" 
-          onClick={() => router.push('/tracker')}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-lg font-semibold">Mindfulness Tracker</h1>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="rounded-full bg-transparent text-gray-400 hover:bg-gray-100 h-10 w-10" 
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
-      </div>
+    <div className="flex flex-col min-h-screen bg-[#FCFBF8]">
+      {/* Header and blob */}
+      <div className="relative overflow-hidden py-6">
+        <div className="absolute w-64 h-64 rounded-full bg-[#4CC3FF]/40 blur-[80px] -top-5 z-0" />
+        <div className="flex items-center justify-between p-4 relative z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-[#3B82F6] text-white hover:bg-[#2563EB] h-10 w-10"
+            onClick={() => router.push("/tracker")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-bold">Mindfulness Tracker</h1>
+          <Button variant="ghost" size="icon" className="rounded-full bg-transparent text-gray-400 hover:bg-gray-100 h-10 w-10">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
 
-      {/* Description */}
-      <div className="px-6 py-2 text-center">
-        <p className="text-sm text-gray-500">
-          Mindfulness practice improves mental clarity,<br />
-          reduces stress, and enhances well-being.
-        </p>
+        <div className="px-6 py-2 text-center relative z-10">
+          <p className="text-sm text-gray-500">
+            Mindfulness practice improves mental clarity,
+            <br />
+            reduces stress, and enhances well-being.
+          </p>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -166,41 +211,25 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
         {/* Circular Progress */}
         <div className="relative w-52 h-52 mb-8">
           {/* Background circle */}
-          <svg className="w-full h-full" viewBox="0 0 100 100">
-            <circle 
-              cx="50" 
-              cy="50" 
-              r="45" 
-              fill="white" 
-              stroke="#DBEAFE" 
-              strokeWidth="10"
-              className="drop-shadow-md"
-            />
+          <svg className="w-full h-full" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="45" fill="white" stroke="#DBEAFE" strokeWidth="5" className="drop-shadow-md" />
 
             {/* Progress circle */}
-            <circle 
-              cx="50" 
-              cy="50" 
-              r="45" 
-              fill="none" 
-              stroke="#3B82F6" 
-              strokeWidth="10"
+            <circle
+              cx="60"
+              cy="60"
+              r="45"
+              fill="none"
+              stroke="#3B82F6"
+              strokeWidth="5"
               strokeDasharray="283"
-              strokeDashoffset={283 - (283 * progressPercentage / 100)}
-              transform="rotate(-90 50 50)"
+              strokeDashoffset={283 - (283 * progressPercentage) / 100}
+              transform="rotate(-90 60 60)"
               className="transition-all duration-1000"
             />
 
             {/* Percentage text */}
-            <text 
-              x="50" 
-              y="50" 
-              textAnchor="middle" 
-              dominantBaseline="middle"
-              fontSize="28"
-              fontWeight="bold"
-              fill="#000"
-            >
+            <text x="60" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="28" fontWeight="bold" fill="#000">
               {progressPercentage}
             </text>
           </svg>
@@ -209,24 +238,19 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
         {/* Progress markers */}
         <div className="w-full max-w-xs flex justify-between items-center mb-4">
           <span className="text-xs text-gray-500">0</span>
-          <span className="text-xs text-gray-500">2.5k</span>
-          <span className="text-xs text-gray-500">5k</span>
-          <span className="text-xs text-gray-500">7.5k</span>
-          <span className="text-xs text-gray-500">10k</span>
+          <span className="text-xs text-gray-500">5</span>
+          <span className="text-xs text-gray-500">10</span>
+          <span className="text-xs text-gray-500">15</span>
+          <span className="text-xs text-gray-500">20</span>
         </div>
 
         {/* Progress bar */}
         <div className="w-full max-w-xs bg-[#DBEAFE] rounded-full h-2 mb-6">
-          <div 
-            className="bg-[#3B82F6] h-2 rounded-full transition-all duration-1000" 
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
+          <div className="bg-[#3B82F6] h-2 rounded-full transition-all duration-1000" style={{ width: `${progressPercentage}%` }}></div>
         </div>
 
         {/* Mindfulness fact */}
-        <p className="text-sm text-center text-gray-600 mb-8">
-          Mindfulness improves focus and reduces stress
-        </p>
+        <p className="text-sm text-center text-gray-600 mb-8">Mindfulness improves focus and reduces stress</p>
       </div>
 
       {/* Add Minutes Form */}
@@ -254,10 +278,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
             <Button
               key={activity.id}
               variant={selectedActivity === activity.id ? "default" : "outline"}
-              className={cn(
-                "h-auto py-2 px-3 justify-start",
-                selectedActivity === activity.id ? "bg-[#3B82F6] text-white" : "bg-white"  
-              )}
+              className={cn("h-auto py-2 px-3 justify-start", selectedActivity === activity.id ? "bg-[#3B82F6] text-white" : "bg-white")}
               onClick={() => setSelectedActivity(activity.id)}
               disabled={isLoading || animationInProgress}
             >
@@ -269,89 +290,40 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
           ))}
         </div>
 
-        <Button 
-          className="w-full bg-black text-white hover:bg-gray-800" 
-          onClick={handleAddMindfulness}
-          disabled={isLoading || animationInProgress}
-        >
+        <Button className="w-full bg-black text-white hover:bg-gray-800" onClick={handleAddMindfulness} disabled={isLoading || animationInProgress}>
           {isLoading ? "Logging..." : "Add minutes"}
         </Button>
       </div>
 
       {/* Tips Card */}
-      <Card className="w-full mt-6 mb-20">
-        <CardContent className="pt-4">
-          <h3 className="font-semibold mb-2">Mindfulness Tips</h3>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start">
-              <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-2 mt-0.5">
-                <BrainIcon className="h-3 w-3" />
-              </div>
-              <span>Start with just 5 minutes a day and gradually increase</span>
-            </li>
-            <li className="flex items-start">
-              <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-2 mt-0.5">
-                <BrainIcon className="h-3 w-3" />
-              </div>
-              <span>Focus on your breath when your mind wanders</span>
-            </li>
-            <li className="flex items-start">
-              <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-2 mt-0.5">
-                <BrainIcon className="h-3 w-3" />
-              </div>
-              <span>Practice at the same time each day to build a habit</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-      
-      {/* Navigation Tabs */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2">
-        <button className="flex flex-col items-center justify-center w-16 py-1">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 20V14H15V20H19V12H22L12 3L2 12H5V20H9Z" fill="#CCCCCC"/>
-            </svg>
-          </div>
-          <span className="text-xs mt-1 text-gray-500">Home</span>
-        </button>
-
-        <button className="flex flex-col items-center justify-center w-16 py-1">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="#3B82F6"/>
-            </svg>
-          </div>
-          <span className="text-xs mt-1 text-[#3B82F6] font-medium">Tracker</span>
-        </button>
-
-        <button className="flex flex-col items-center justify-center w-16 py-1">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM17 13H13V17H11V13H7V11H11V7H13V11H17V13Z" fill="#CCCCCC"/>
-            </svg>
-          </div>
-          <span className="text-xs mt-1 text-gray-500">Store</span>
-        </button>
-
-        <button className="flex flex-col items-center justify-center w-16 py-1">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H6L4 18V4H20V16Z" fill="#CCCCCC"/>
-            </svg>
-          </div>
-          <span className="text-xs mt-1 text-gray-500">Chat</span>
-        </button>
-
-        <button className="flex flex-col items-center justify-center w-16 py-1">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#CCCCCC"/>
-            </svg>
-          </div>
-          <span className="text-xs mt-1 text-gray-500">AI Gab</span>
-        </button>
+      <div className="px-6">
+        <Card className="w-full mt-6 mb-20">
+          <CardContent className="pt-4">
+            <h3 className="font-semibold mb-2">Mindfulness Tips</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start">
+                <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-2 mt-0.5">
+                  <BrainIcon className="h-3 w-3" />
+                </div>
+                <span>Start with just 5 minutes a day and gradually increase</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-2 mt-0.5">
+                  <BrainIcon className="h-3 w-3" />
+                </div>
+                <span>Focus on your breath when your mind wanders</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-2 mt-0.5">
+                  <BrainIcon className="h-3 w-3" />
+                </div>
+                <span>Practice at the same time each day to build a habit</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
+      <div className="h-10"></div>
     </div>
   );
 }
