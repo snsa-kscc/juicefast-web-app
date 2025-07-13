@@ -7,9 +7,10 @@ import { ImageScanner } from "@/components/meal-tracker/image-scanner";
 import { ManualEntryForm } from "@/components/meal-tracker/manual-entry-form";
 import { MealTrackerExtended } from "@/components/health-tracker/meal-tracker-extended";
 import { MacroData, MealEntry, MealType, DailyHealthMetrics } from "@/types/health-metrics";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings, Home, ShoppingCart, MessageCircle, Users } from "lucide-react";
 import { MEALS_TRACKER_CONFIG } from "@/data/meals-tracker";
 import { addMeal } from "@/app/actions/health-actions";
+import { cn } from "@/lib/utils";
 
 interface MealsTrackerClientProps {
   userId: string;
@@ -19,8 +20,10 @@ interface MealsTrackerClientProps {
 export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerClientProps) {
   const router = useRouter();
   const [activeEntryTab, setActiveEntryTab] = useState<"scan" | "manual">("scan");
+  const [activeInputMethod, setActiveInputMethod] = useState<"camera" | "photos" | "files">("camera");
   const [meals, setMeals] = useState<MealEntry[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"breakfast" | "lunch" | "dinner" | "snack">("breakfast");
   
   // Initialize with data if available
   useEffect(() => {
@@ -60,50 +63,200 @@ export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerCli
   };
 
   return (
-    <div className="py-6 font-sans">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          className="mr-2 p-0 h-9 w-9" 
-          onClick={() => router.push('/tracker')}
-        >
-          <ArrowLeft className="h-5 w-5" />
+    <div className="py-6 font-sans bg-gradient-to-b from-white to-blue-50 min-h-screen relative pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 mb-6">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            className="mr-2 p-0 h-12 w-12 rounded-full bg-emerald-500 text-white hover:bg-emerald-600" 
+            onClick={() => router.push('/tracker')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Meal Tracker</h1>
+            <p className="text-gray-500 text-sm">What you eat builds your energy, mood and body. Let's track it.</p>
+          </div>
+        </div>
+        <Button variant="ghost" className="p-2 rounded-full" onClick={() => {}}>
+          <Settings className="h-6 w-6" />
         </Button>
-        <h1 className="text-2xl font-bold">Meal Tracker</h1>
       </div>
       
-      <div className="space-y-6">
-        {/* Meal Entry Tab buttons */}
-        <div className="flex border-b">
+      {/* Scan meal image section */}
+      <div className="px-4 mb-6">
+        <h2 className="text-xl font-bold mb-4">Scan meal image</h2>
+        
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <Button
-            variant={activeEntryTab === "scan" ? "default" : "ghost"}
+            variant={activeEntryTab === "scan" ? "default" : "outline"}
             onClick={() => setActiveEntryTab("scan")}
-            className="flex-1 rounded-none rounded-tl-md"
-            disabled={isLoading}
+            className="rounded-md bg-emerald-500 hover:bg-emerald-600 text-white h-14"
           >
-            Scan Meal
+            Upload image
           </Button>
           <Button
-            variant={activeEntryTab === "manual" ? "default" : "ghost"}
+            variant={activeEntryTab === "manual" ? "default" : "outline"}
             onClick={() => setActiveEntryTab("manual")}
-            className="flex-1 rounded-none rounded-tr-md"
-            disabled={isLoading}
+            className="rounded-md border-2 border-black/10 bg-white text-black h-14"
           >
-            Manual Entry
+            Manual entry
           </Button>
         </div>
-
-        {/* Active tab content */}
-        {activeEntryTab === "scan" ? (
-          <ImageScanner onScanComplete={handleMealAdded} />
-        ) : (
-          <ManualEntryForm onMealAdded={handleMealAdded} />
+        
+        {activeEntryTab === "scan" && (
+          <div className="grid grid-cols-3 gap-4">
+            <Button 
+              variant="outline" 
+              className={cn(
+                "flex flex-col items-center justify-center h-24 rounded-lg border-2",
+                activeInputMethod === "camera" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"
+              )}
+              onClick={() => setActiveInputMethod("camera")}
+            >
+              <span className="text-sm">Camera</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className={cn(
+                "flex flex-col items-center justify-center h-24 rounded-lg border-2",
+                activeInputMethod === "photos" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"
+              )}
+              onClick={() => setActiveInputMethod("photos")}
+            >
+              <span className="text-sm">Photos</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className={cn(
+                "flex flex-col items-center justify-center h-24 rounded-lg border-2",
+                activeInputMethod === "files" ? "border-emerald-500 bg-emerald-50" : "border-gray-200"
+              )}
+              onClick={() => setActiveInputMethod("files")}
+            >
+              <span className="text-sm">Files</span>
+            </Button>
+          </div>
         )}
+        
+        {/* Active tab content - hidden for now to match the design */}
+        <div className="hidden">
+          {activeEntryTab === "scan" ? (
+            <ImageScanner onScanComplete={handleMealAdded} />
+          ) : (
+            <ManualEntryForm onMealAdded={handleMealAdded} />
+          )}
+        </div>
       </div>
 
-      {/* Meal tracker by meal type */}
-      <div className="mt-8">
-        <MealTrackerExtended meals={meals} onAddMeal={handleAddMealByType} />
+      {/* Meals section */}
+      <div className="px-4 mb-6">
+        <h2 className="text-xl font-bold mb-4">Meals</h2>
+        
+        <div className="grid grid-cols-4 gap-1 mb-4">
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "text-sm py-2",
+              activeTab === "breakfast" ? "border-b-2 border-black font-medium" : "text-gray-500"
+            )}
+            onClick={() => setActiveTab("breakfast")}
+          >
+            Breakfast
+          </Button>
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "text-sm py-2",
+              activeTab === "snack" ? "border-b-2 border-black font-medium" : "text-gray-500"
+            )}
+            onClick={() => setActiveTab("snack")}
+          >
+            Snack
+          </Button>
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "text-sm py-2",
+              activeTab === "lunch" ? "border-b-2 border-black font-medium" : "text-gray-500"
+            )}
+            onClick={() => setActiveTab("lunch")}
+          >
+            Lunch
+          </Button>
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "text-sm py-2",
+              activeTab === "dinner" ? "border-b-2 border-black font-medium" : "text-gray-500"
+            )}
+            onClick={() => setActiveTab("dinner")}
+          >
+            Dinner
+          </Button>
+        </div>
+        
+        <div className="flex items-center justify-center py-8 text-gray-500">
+          No meals logged yet
+        </div>
+        
+        <Button 
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-md py-6"
+          onClick={() => handleAddMealByType(activeTab)}
+        >
+          Add your first meal
+        </Button>
+      </div>
+      
+      {/* Daily nutrition totals */}
+      <div className="px-4">
+        <h2 className="text-xl font-bold mb-4">Daily nutrition totals</h2>
+        
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-emerald-500">0</div>
+            <div className="text-xs text-gray-500">Calories</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-emerald-500">0g</div>
+            <div className="text-xs text-gray-500">Protein</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-emerald-500">0g</div>
+            <div className="text-xs text-gray-500">Carbs</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-emerald-500">0g</div>
+            <div className="text-xs text-gray-500">Fat</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Bottom Navigation Bar - Glassmorphism style */}
+      <div className="fixed bottom-0 left-0 right-0 p-4">
+        <div className="bg-white/70 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg px-4 py-3 flex justify-between items-center">
+          <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-1 px-2">
+            <Home className="h-5 w-5" />
+            <span className="text-xs">Home</span>
+          </Button>
+          <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-1 px-2 text-emerald-500">
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-xs">Tracker</span>
+          </Button>
+          <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-1 px-2">
+            <ShoppingCart className="h-5 w-5" />
+            <span className="text-xs">Store</span>
+          </Button>
+          <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-1 px-2">
+            <MessageCircle className="h-5 w-5" />
+            <span className="text-xs">Chat</span>
+          </Button>
+          <Button variant="ghost" className="flex flex-col items-center gap-1 h-auto py-1 px-2">
+            <Users className="h-5 w-5" />
+            <span className="text-xs">JF Club</span>
+          </Button>
+        </div>
       </div>
     </div>
   );
