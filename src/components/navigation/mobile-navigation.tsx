@@ -16,17 +16,9 @@ export function MobileNavigation() {
             const IconComponent = item.icon;
 
             return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex flex-col items-center justify-center px-2"
-              >
-                <IconComponent 
-                  className={`w-5 h-5 ${isActive ? "text-primary" : "text-gray-600"}`} 
-                />
-                <span className={`text-[10px] mt-1 ${isActive ? "text-primary font-medium" : "text-gray-600"}`}>
-                  {item.name}
-                </span>
+              <Link key={item.name} href={item.href} className="flex flex-col items-center justify-center px-2">
+                <IconComponent />
+                <span className={`text-[10px] mt-1 ${isActive ? "text-primary font-medium" : "text-gray-600"}`}>{item.name}</span>
               </Link>
             );
           })}

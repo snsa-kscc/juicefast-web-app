@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { StepEntry, DailyHealthMetrics } from "@/types/health-metrics";
 import { ArrowLeft, Settings } from "lucide-react";
 import { STEPS_TRACKER_CONFIG } from "@/data/steps-tracker";
@@ -257,13 +257,12 @@ export function StepsTrackerClient({ userId, initialStepsData }: StepsTrackerCli
         </div>
 
         <div className="mb-4">
-          <Input
-            type="range"
-            min="0"
-            max="10000"
-            step="100"
-            value={stepCount}
-            onChange={(e) => setStepCount(parseInt(e.target.value))}
+          <Slider
+            value={[stepCount]}
+            min={0}
+            max={10000}
+            step={100}
+            onValueChange={(value) => setStepCount(value[0])}
             className="w-full"
             disabled={isLoading || animationInProgress}
           />

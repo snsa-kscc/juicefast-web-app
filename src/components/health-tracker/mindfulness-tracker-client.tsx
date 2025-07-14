@@ -181,7 +181,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full bg-[#3B82F6] text-white hover:bg-[#2563EB] h-10 w-10"
+            className="rounded-full bg-[#FE8E77] text-white hover:bg-[#FFEFEB] h-10 w-10"
             onClick={() => router.push("/tracker")}
           >
             <ArrowLeft className="h-5 w-5" />
@@ -212,7 +212,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
         <div className="relative w-52 h-52 mb-8">
           {/* Background circle */}
           <svg className="w-full h-full" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="45" fill="white" stroke="#DBEAFE" strokeWidth="5" className="drop-shadow-md" />
+            <circle cx="60" cy="60" r="45" fill="white" stroke="#FFEFEB" strokeWidth="5" className="drop-shadow-md" />
 
             {/* Progress circle */}
             <circle
@@ -220,7 +220,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
               cy="60"
               r="45"
               fill="none"
-              stroke="#3B82F6"
+              stroke="#FE8E77"
               strokeWidth="5"
               strokeDasharray="283"
               strokeDashoffset={283 - (283 * progressPercentage) / 100}
@@ -245,8 +245,8 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
         </div>
 
         {/* Progress bar */}
-        <div className="w-full max-w-xs bg-[#DBEAFE] rounded-full h-2 mb-6">
-          <div className="bg-[#3B82F6] h-2 rounded-full transition-all duration-1000" style={{ width: `${progressPercentage}%` }}></div>
+        <div className="w-full max-w-xs bg-[#FFEFEB] rounded-full h-2 mb-6">
+          <div className="bg-[#FE8E77] h-2 rounded-full transition-all duration-1000" style={{ width: `${progressPercentage}%` }}></div>
         </div>
 
         {/* Mindfulness fact */}
@@ -278,7 +278,7 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
             <Button
               key={activity.id}
               variant={selectedActivity === activity.id ? "default" : "outline"}
-              className={cn("h-auto py-2 px-3 justify-start", selectedActivity === activity.id ? "bg-[#3B82F6] text-white" : "bg-white")}
+              className={cn("h-auto py-2 px-3 justify-start", selectedActivity === activity.id ? "bg-[#FE8E77] text-white" : "bg-white")}
               onClick={() => setSelectedActivity(activity.id)}
               disabled={isLoading || animationInProgress}
             >

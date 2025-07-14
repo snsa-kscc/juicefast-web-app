@@ -238,24 +238,27 @@ export function TrackerClient({ userId = "", weeklyMetrics = [], weeklyAverageSc
   }
 
   return (
-    <div className="font-sans min-h-screen bg-gradient-to-b from-[#E8F8F3] to-[#F8FFFD]">
-      {/* Header */}
-      <div className="p-6 flex justify-between items-center">
-        <h1 className="text-xl font-medium">Wellness Tracker</h1>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Settings className="h-5 w-5" />
-        </Button>
-      </div>
+    <div className="font-sans min-h-screen bg-[#FCFBF8]">
+      {/* Header and blob */}
+      <div className="relative overflow-hidden py-6">
+        <div className="absolute w-64 h-64 rounded-full bg-[#4CC3FF]/40 blur-[80px] -top-5 z-0" />
+        <div className="px-6 flex justify-between items-center relative z-10">
+          <h1 className="text-xl font-bold">Wellness Tracker</h1>
+          <Button variant="ghost" size="icon" className="rounded-full bg-transparent text-gray-400 hover:bg-gray-100 h-10 w-10">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
 
-      {/* Today's Plan */}
-      <div className="px-6 pb-4">
-        <p className="text-gray-600 text-lg">Today I'm going to....</p>
+        {/* Today's Plan */}
+        <div className="px-6 pb-4 relative z-10">
+          <p className="text-sm text-gray-500">Today I'm going to....</p>
+        </div>
       </div>
 
       {/* Wellness Score */}
-      <div className="px-6 py-4 bg-white">
+      <div className="px-6 py-6">
         <div className="flex flex-col items-center">
-          <div className="flex justify-between w-full mb-2">
+          <div className="flex justify-around w-full mb-2">
             <h2 className="text-lg font-semibold uppercase">WELLNESS SCORE</h2>
             <div className="rounded-full bg-gray-100 p-1">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -272,26 +275,37 @@ export function TrackerClient({ userId = "", weeklyMetrics = [], weeklyAverageSc
           <p className="text-gray-500 text-sm mb-6">Average wellness score for the last 7 days</p>
 
           {/* Circular Progress */}
-          <div className="relative w-48 h-48 mb-6">
-            {/* Background Circle */}
-            <div className="absolute inset-0 rounded-full border-[5px] border-[#F2E9D8]"></div>
+          <div className="relative w-52 h-52 mb-8">
+            {/* Background circle */}
+            <svg className="w-full h-full" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="45" fill="white" stroke="#F2E9D8" strokeWidth="5" className="drop-shadow-md" />
 
-            {/* Progress Circle - We're using a pseudo SVG approach for the circular progress */}
-            <div className="absolute inset-0 rounded-full border-[5px] border-transparent"></div>
+              {/* Progress circle */}
+              <circle
+                cx="60"
+                cy="60"
+                r="45"
+                fill="none"
+                stroke="#E8D5B0"
+                strokeWidth="5"
+                strokeDasharray="283"
+                strokeDashoffset={283 - (283 * Math.min(100, weeklyAverageScore)) / 100}
+                transform="rotate(-90 60 60)"
+                className="transition-all duration-1000"
+              />
 
-            {/* Center with Score */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-6xl font-light text-[#E8D5B0]">{Math.round(weeklyAverageScore)}</span>
-            </div>
-
-            {/* No target indicator */}
+              {/* Score text */}
+              <text x="60" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="28" fontWeight="bold" fill="#000">
+                {Math.round(weeklyAverageScore)}
+              </text>
+            </svg>
           </div>
         </div>
       </div>
 
       {/* Tracking Options */}
-      <div className="px-6 py-4 bg-white">
-        <h3 className="font-medium mb-4">What would you like to track today?</h3>
+      <div className="px-6 py-6">
+        <h3 className="font-medium mb-4 text-center">What would you like to track today?</h3>
 
         <div className="space-y-3">
           {trackingOptions.map((option) => (

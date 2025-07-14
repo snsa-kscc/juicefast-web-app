@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { SleepEntry, DailyHealthMetrics } from "@/types/health-metrics";
 import { formatDateKey } from "@/lib/date-utils";
-import { ArrowLeft, BedIcon, MoonIcon, SunIcon, Settings } from "lucide-react";
+import { ArrowLeft, BedIcon, MoonIcon, SunIcon, Settings, Clock } from "lucide-react";
 import { SLEEP_TRACKER_CONFIG } from "@/data/sleep-tracker";
 import { addSleep } from "@/app/actions/health-actions";
+import { cn } from "@/lib/utils";
 
 interface SleepTrackerClientProps {
   userId: string;
@@ -20,14 +21,15 @@ interface SleepTrackerClientProps {
 export function SleepTrackerClient({ userId, initialSleepData }: SleepTrackerClientProps) {
   const router = useRouter();
   const [sleepEntry, setSleepEntry] = useState<SleepEntry | null>(initialSleepData?.sleep || null);
-  const [sleepHours, setSleepHours] = useState<number>(SLEEP_TRACKER_CONFIG.dailyGoal);
+  const [hoursSlept, setHoursSlept] = useState<number>(sleepEntry?.hoursSlept || SLEEP_TRACKER_CONFIG.dailyGoal);
   const [displayedHours, setDisplayedHours] = useState<number>(0);
-  const [sleepQuality, setSleepQuality] = useState<number>(7);
+  const [sleepQuality, setSleepQuality] = useState<number>(sleepEntry?.quality || 3);
   const [bedTime, setBedTime] = useState<string>(SLEEP_TRACKER_CONFIG.defaultBedtime);
   const [wakeTime, setWakeTime] = useState<string>(SLEEP_TRACKER_CONFIG.defaultWakeTime);
   const [dailyGoal] = useState<number>(SLEEP_TRACKER_CONFIG.dailyGoal); // Daily sleep goal
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [animationInProgress, setAnimationInProgress] = useState<boolean>(false);
+  const [selectedFactors, setSelectedFactors] = useState<string[]>([]);
 
   // Refs for animation
   const animationRef = useRef<number | null>(null);
@@ -37,7 +39,7 @@ export function SleepTrackerClient({ userId, initialSleepData }: SleepTrackerCli
   useEffect(() => {
     if (initialSleepData?.sleep) {
       setSleepEntry(initialSleepData.sleep);
-      setSleepHours(initialSleepData.sleep.hoursSlept);
+      setHoursSlept(initialSleepData.sleep.hoursSlept);
       setDisplayedHours(initialSleepData.sleep.hoursSlept);
       setSleepQuality(initialSleepData.sleep.quality);
       previousValueRef.current = initialSleepData.sleep.hoursSlept;
@@ -48,6 +50,10 @@ export function SleepTrackerClient({ userId, initialSleepData }: SleepTrackerCli
 
       setBedTime(formatTimeForInput(bedTimeDate));
       setWakeTime(formatTimeForInput(wakeTimeDate));
+    } else {
+      // Set default values if no data
+      setDisplayedHours(0);
+      previousValueRef.current = 0;
     }
   }, [initialSleepData]);
 
@@ -106,35 +112,45 @@ export function SleepTrackerClient({ userId, initialSleepData }: SleepTrackerCli
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
 
+      // Parse bedtime (assumed to be the previous day)
       const [bedHours, bedMinutes] = bedTime.split(":").map(Number);
+      const bedDateTime = new Date(yesterday);
+      bedDateTime.setHours(bedHours, bedMinutes, 0, 0);
+
+      // Parse wake time (assumed to be today)
       const [wakeHours, wakeMinutes] = wakeTime.split(":").map(Number);
+      const wakeDateTime = new Date(today);
+      wakeDateTime.setHours(wakeHours, wakeMinutes, 0, 0);
 
-      // Assume bedtime is from yesterday if it's after wake time
-      const bedTimeDate = new Date(today);
-      bedTimeDate.setHours(bedHours, bedMinutes, 0, 0);
-
-      const wakeTimeDate = new Date(today);
-      wakeTimeDate.setHours(wakeHours, wakeMinutes, 0, 0);
-
-      // If bedtime is after wake time, assume bedtime was yesterday
-      if (bedTimeDate > wakeTimeDate) {
-        bedTimeDate.setDate(bedTimeDate.getDate() - 1);
+      // If bedtime is after wake time, adjust the day
+      if (bedDateTime >= wakeDateTime) {
+        bedDateTime.setDate(bedDateTime.getDate() - 1);
       }
 
+      // Calculate hours slept
+      const sleepDuration = (wakeDateTime.getTime() - bedDateTime.getTime()) / (1000 * 60 * 60);
+      const calculatedHours = parseFloat(sleepDuration.toFixed(1));
+
+      // Create sleep entry
       const newSleepEntry: SleepEntry = {
-        hoursSlept: sleepHours,
+        hoursSlept: calculatedHours,
         quality: sleepQuality,
-        startTime: bedTimeDate,
-        endTime: wakeTimeDate,
+        startTime: bedDateTime,
+        endTime: wakeDateTime,
       };
 
       // Save to database
-      await addSleep(userId, today, newSleepEntry);
+      const success = await addSleep(userId, today, newSleepEntry);
 
-      // Update local state
-      setSleepEntry(newSleepEntry);
+      if (success) {
+        // Update local state
+        setSleepEntry(newSleepEntry);
+        setHoursSlept(calculatedHours);
+        setDisplayedHours(calculatedHours);
+        previousValueRef.current = calculatedHours;
+      }
     } catch (error) {
-      console.error("Failed to save sleep data:", error);
+      console.error("Error saving sleep data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -215,11 +231,11 @@ export function SleepTrackerClient({ userId, initialSleepData }: SleepTrackerCli
 
         {/* Progress markers */}
         <div className="w-full max-w-xs flex justify-between items-center mb-4">
-          <span className="text-xs text-gray-500">0</span>
-          <span className="text-xs text-gray-500">2.5k</span>
-          <span className="text-xs text-gray-500">5k</span>
-          <span className="text-xs text-gray-500">7.5k</span>
-          <span className="text-xs text-gray-500">10k</span>
+          <span className="text-xs text-gray-500">0h</span>
+          <span className="text-xs text-gray-500">2h</span>
+          <span className="text-xs text-gray-500">4h</span>
+          <span className="text-xs text-gray-500">6h</span>
+          <span className="text-xs text-gray-500">8h</span>
         </div>
 
         {/* Progress bar */}
@@ -227,34 +243,58 @@ export function SleepTrackerClient({ userId, initialSleepData }: SleepTrackerCli
           <div className="bg-[#8B5CF6] h-2 rounded-full transition-all duration-1000" style={{ width: `${progressPercentage}%` }}></div>
         </div>
 
-        {/* Sleep fact */}
-        <p className="text-sm text-center text-gray-600 mb-8">Estimated calories: 245 kcal</p>
+        {/* Sleep quality indicator */}
+        <p className="text-sm text-center text-gray-600 mb-8">{sleepEntry ? `Sleep quality: ${sleepQuality}/5` : "No sleep data recorded"}</p>
       </div>
 
-      {/* Add Steps Form */}
+      {/* Sleep Entry Form */}
       <div className="w-full px-6">
-        <h3 className="font-semibold mb-1">Add steps</h3>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs text-gray-500">Steps</span>
-          <span className="text-xs font-medium">{sleepHours * 1000} steps</span>
+        <h3 className="font-semibold mb-3">Log your sleep</h3>
+
+        {/* Bed time and wake time */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Bed time</label>
+            <div className="relative">
+              <MoonIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input type="time" value={bedTime} onChange={(e) => setBedTime(e.target.value)} className="pl-9" disabled={isLoading || animationInProgress} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Wake time</label>
+            <div className="relative">
+              <SunIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input type="time" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)} className="pl-9" disabled={isLoading || animationInProgress} />
+            </div>
+          </div>
         </div>
 
+        {/* Sleep quality */}
         <div className="mb-4">
+          <div className="flex justify-between mb-1">
+            <label className="text-xs text-gray-500">Sleep quality</label>
+            <span className="text-xs font-medium">{sleepQuality}/5</span>
+          </div>
           <Slider
-            value={[sleepHours]}
+            value={[sleepQuality]}
             min={1}
-            max={10}
-            step={0.5}
-            onValueChange={(value) => setSleepHours(value[0])}
+            max={5}
+            step={1}
+            onValueChange={(value) => setSleepQuality(value[0])}
             className="w-full"
             disabled={isLoading || animationInProgress}
           />
+          <div className="flex justify-between mt-1">
+            <span className="text-xs text-gray-500">Poor</span>
+            <span className="text-xs text-gray-500">Excellent</span>
+          </div>
         </div>
 
-        <Button className="w-full bg-black text-white hover:bg-gray-800" onClick={handleSaveSleep} disabled={isLoading || animationInProgress}>
-          {isLoading ? "Saving..." : "Add steps"}
+        <Button className="w-full bg-[#8B5CF6] text-white hover:bg-[#7C3AED]" onClick={handleSaveSleep} disabled={isLoading || animationInProgress}>
+          {isLoading ? "Saving..." : "Save sleep data"}
         </Button>
       </div>
+      <div className="h-26"></div>
     </div>
   );
 }
