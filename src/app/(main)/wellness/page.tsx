@@ -2,111 +2,131 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { HeartIcon, BookOpenIcon, BrainIcon } from "lucide-react";
-import { WELLNESS_ARTICLES } from "@/data/wellness-articles";
-import { WELLNESS_PROGRAMS } from "@/data/wellness-programs";
-import { WELLNESS_TIPS } from "@/data/wellness-tips";
+import { Settings } from "lucide-react";
+import Image from "next/image";
+import { WELLNESS_CATEGORIES, TRENDING_CONTENT, DAILY_CONTENT, MIND_CONTENT } from "@/data/wellness-content";
+import { CategorySelector } from "@/components/wellness/category-selector";
+import { ContentGrid } from "@/components/wellness/content-grid";
+import { DailyContent } from "@/components/wellness/daily-content";
 
 export default function WellnessPage() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("trending");
+  const [selectedCategory, setSelectedCategory] = useState<string>("trending");
 
-  const filteredArticles = selectedCategory ? WELLNESS_ARTICLES.filter((article) => article.category === selectedCategory) : WELLNESS_ARTICLES;
+  // Handle tab change
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSelectedCategory(tab === "trending" ? "trending" : selectedCategory);
+  };
 
-  const categories = Array.from(new Set(WELLNESS_ARTICLES.map((article) => article.category)));
+  // Handle item click
+  const handleItemClick = (itemId: string) => {
+    router.push(`/wellness/content/${itemId}`);
+  };
+
+  // Handle category selection
+  const handleCategoryClick = (category: string) => {
+    if (category === "trending") {
+      setActiveTab("trending");
+      setSelectedCategory("trending");
+    } else {
+      // Navigate to category page for Mind, Workouts, Nutrition, Beauty
+      if (["mind", "workouts", "nutrition", "beauty"].includes(category)) {
+        router.push(`/wellness/categories/${category.toLowerCase()}`);
+      } else {
+        setActiveTab("discover");
+        setSelectedCategory(category);
+      }
+    }
+  };
+
+  // Handle category selection
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+
+    // If we're in discover tab and selecting trending, switch to trending tab
+    if (activeTab === "discover" && category === "trending") {
+      setActiveTab("trending");
+    }
+    // If we're in trending tab and selecting non-trending, switch to discover tab
+    else if (activeTab === "trending" && category !== "trending") {
+      setActiveTab("discover");
+    }
+  };
+
+  // Determine which content to show based on selected category
+  const getContentForCategory = () => {
+    switch (selectedCategory) {
+      case "trending":
+        return TRENDING_CONTENT;
+      case "mind":
+        return MIND_CONTENT;
+      default:
+        return [];
+    }
+  };
 
   return (
-    <div className="py-6 font-sans">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Wellness Center</h1>
-        <p className="text-gray-500 mt-2">Articles and tips for your health journey</p>
+    <div className="pb-6 font-sans">
+      {/* Header */}
+      <div className="bg-gradient-to-b from-cyan-50 to-transparent p-4 pb-8">
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-xl font-bold">JF Club</h1>
+          <button className="p-2">
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600">
+          Workouts, recipes and relevant articles come to you every day, and are all based on your current state, logged results and overall wellness goals.
+        </p>
       </div>
 
-      {/* Featured wellness programs */}
-      <div className="mb-8">
-        <h2 className="text-lg font-medium mb-4">Featured Programs</h2>
-        <div className="grid grid-cols-2 gap-4">
-          {WELLNESS_PROGRAMS.map(program => {
-            const IconComponent = program.icon === "Brain" ? BrainIcon : HeartIcon;
-            const colorClasses = program.color === "blue" ? 
-              { bg: "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100", icon: "bg-blue-100 text-blue-600", title: "text-blue-700", text: "text-blue-600" } :
-              { bg: "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100", icon: "bg-green-100 text-green-600", title: "text-green-700", text: "text-green-600" };
-            
-            return (
-              <Card key={program.id} className={colorClasses.bg}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col items-center text-center">
-                    <div className={`${colorClasses.icon.split(' ')[0]} p-2 rounded-full mb-2`}>
-                      <IconComponent className={`h-6 w-6 ${colorClasses.icon.split(' ')[1]}`} />
-                    </div>
-                    <h3 className={`font-medium ${colorClasses.title}`}>{program.title}</h3>
-                    <p className={`text-xs ${colorClasses.text} mt-1`}>{program.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+      {/* Tab Navigation */}
+      <div className="border-b">
+        <div className="flex">
+          <button
+            onClick={() => handleTabChange("trending")}
+            className={`px-6 py-3 font-medium text-sm ${activeTab === "trending" ? "text-gray-900 border-b-2 border-gray-900" : "text-gray-400"}`}
+          >
+            Trending
+          </button>
+          <button
+            onClick={() => handleTabChange("discover")}
+            className={`px-6 py-3 font-medium text-sm ${activeTab === "discover" ? "text-gray-900 border-b-2 border-gray-900" : "text-gray-400"}`}
+          >
+            Discover
+          </button>
         </div>
       </div>
 
-      {/* Category filters */}
-      <div className="mb-6">
-        <h2 className="text-lg font-medium mb-3">Wellness Articles</h2>
-        <div className="flex flex-wrap gap-2">
-          <Button variant={selectedCategory === null ? "default" : "outline"} size="sm" onClick={() => setSelectedCategory(null)}>
-            All
-          </Button>
-          {categories.map((category) => (
-            <Button key={category} variant={selectedCategory === category ? "default" : "outline"} size="sm" onClick={() => setSelectedCategory(category)}>
-              {category}
-            </Button>
-          ))}
-        </div>
+      {/* Category Selector */}
+      <div className="p-4">
+        <CategorySelector categories={WELLNESS_CATEGORIES} selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />
       </div>
 
-      {/* Articles grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredArticles.map((article) => (
-          <Card key={article.id} className="overflow-hidden h-full flex flex-col">
-            <div className="aspect-video w-full overflow-hidden">
-              <img src={article.imageUrl} alt={article.title} className="w-full h-full object-cover transition-transform hover:scale-105" />
-            </div>
-            <CardHeader>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-gray-500">{article.date}</span>
-                <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full">{article.category}</span>
-              </div>
-              <CardTitle className="text-xl">{article.title}</CardTitle>
-              <CardDescription>{article.excerpt}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="line-clamp-3 text-gray-600">{article.content}</p>
-            </CardContent>
-            <div className="p-4 pt-0 mt-auto">
-              <Button variant="outline" className="w-full" onClick={() => router.push(`/wellness/${article.id}`)}>
-                Read More
-              </Button>
-            </div>
-          </Card>
-        ))}
+      {/* Content Section */}
+      <div className="px-4">
+        <h2 className="text-2xl font-bold mb-4">
+          {selectedCategory === "trending" ? "Trending" : WELLNESS_CATEGORIES.find((c) => c.id === selectedCategory)?.name}
+        </h2>
+
+        {/* Content Grid */}
+        <ContentGrid items={getContentForCategory()} columns={2} onItemClick={handleItemClick} />
+
+        {/* Premium Banner - Only show on trending */}
+        {selectedCategory === "trending" && (
+          <div className="mb-8">
+            <p className="text-xs text-center text-gray-500 mb-2">
+              *Premium also includes detail analytics, premium insights, PDF data export and better wellness predictions
+            </p>
+            <button className="w-full bg-blue-600 text-white py-3 rounded-full font-bold">GO PREMIUM</button>
+          </div>
+        )}
+
+        {/* Daily Content - Only show on trending */}
+        {selectedCategory === "trending" && <DailyContent items={DAILY_CONTENT} onItemClick={handleItemClick} />}
       </div>
-      
-      {/* Daily wellness tip */}
-      <Card className="mt-8 bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
-            <BookOpenIcon className="h-5 w-5 mr-2 text-amber-500" />
-            Daily Wellness Tip
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-amber-800">
-            "{WELLNESS_TIPS[Math.floor(Math.random() * WELLNESS_TIPS.length)].content}"
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
