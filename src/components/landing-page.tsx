@@ -61,7 +61,8 @@ export default function LandingPage() {
               className="lg:w-1/2 space-y-6 text-center lg:text-left"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Track Your Nutrition <br />
+                Track Your Nutrition !!!!!!!!!!!
+                <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-teal-500">For a Healthier You</span>
               </h1>
               <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-xl mx-auto lg:mx-0">
