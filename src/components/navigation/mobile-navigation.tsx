@@ -9,7 +9,7 @@ export function MobileNavigation() {
 
   return (
     <nav
-      className="fixed left-0 right-0 z-50 bottom-64"
+      className="fixed left-0 right-0 z-50 bottom-14"
 
       // style={{ bottom: "calc(env(safe-area-inset-bottom, 1rem) + 1rem)" }}
     >
