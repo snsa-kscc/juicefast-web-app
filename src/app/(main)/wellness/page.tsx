@@ -16,11 +16,13 @@ import {
   WORKOUT_SUBCATEGORIES,
   NUTRITION_SUBCATEGORIES,
   BEAUTY_SUBCATEGORIES,
-  SubcategoryItem
+  SubcategoryItem,
 } from "@/data/wellness-content";
 import { CategorySelector } from "@/components/wellness/category-selector";
 import { ContentGrid } from "@/components/wellness/content-grid";
 import { DailyContent } from "@/components/wellness/daily-content";
+import { PremiumSubscriptionDrawer } from "@/components/wellness/premium-subscription-drawer";
+import { Button } from "@/components/ui/button";
 
 export default function WellnessPage() {
   const router = useRouter();
@@ -85,7 +87,7 @@ export default function WellnessPage() {
         return [];
     }
   };
-  
+
   // Get subcategories for the selected category
   const getSubcategoriesForCategory = () => {
     switch (selectedCategory) {
@@ -152,18 +154,13 @@ export default function WellnessPage() {
         ) : (
           <div className="grid grid-cols-2 gap-4 mb-8">
             {getSubcategoriesForCategory().map((subcategory: SubcategoryItem) => (
-              <div 
-                key={subcategory.id} 
+              <div
+                key={subcategory.id}
                 className="flex flex-col cursor-pointer"
                 onClick={() => router.push(`/wellness/categories/${selectedCategory}/${subcategory.id}`)}
               >
                 <div className="relative rounded-xl overflow-hidden aspect-square">
-                  <Image 
-                    src={subcategory.imageUrl || "/images/wellness/placeholder.jpg"} 
-                    alt={subcategory.name}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={subcategory.imageUrl || "/images/wellness/placeholder.jpg"} alt={subcategory.name} fill className="object-cover" />
                 </div>
                 <div className="mt-2">
                   <h3 className="font-bold">{subcategory.name}</h3>
@@ -184,7 +181,9 @@ export default function WellnessPage() {
             <p className="text-xs text-center text-gray-500 mb-2">
               *Premium also includes detail analytics, premium insights, PDF data export and better wellness predictions
             </p>
-            <button className="w-full bg-blue-600 text-white py-3 rounded-full font-bold">GO PREMIUM</button>
+            <PremiumSubscriptionDrawer>
+              <div className="w-full bg-blue-600 text-white py-3 rounded-full font-bold text-center cursor-pointer">GO PREMIUM</div>
+            </PremiumSubscriptionDrawer>
           </div>
         )}
 
