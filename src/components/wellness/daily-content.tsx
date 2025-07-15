@@ -32,7 +32,7 @@ export function DailyContent({ items, onItemClick }: DailyContentProps) {
         {items.map((item) => (
           <div key={item.id} className="flex flex-col cursor-pointer" onClick={() => handleItemClick(item)}>
             <div className="relative rounded-xl overflow-hidden w-full aspect-square">
-              <Image src={item.imageUrl} alt={item.title || ""} fill className="object-cover" />
+              <Image src={item.imageUrl || ""} alt={item.title || ""} fill className="object-cover" />
             </div>
 
             <div className="mt-2">

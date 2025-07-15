@@ -2,9 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { NUTRITION_SUBCATEGORIES, NUTRITION_CONTENT } from "@/data/wellness-content";
+import { ContentGrid } from "@/components/wellness/content-grid";
+import { ContentCard } from "@/components/wellness/content-card";
+import Image from "next/image";
 
 export default function NutritionPage() {
   const router = useRouter();
+  
+  const handleItemClick = (itemId: string) => {
+    router.push(`/wellness/content/${itemId}`);
+  };
+
+  const handleSubcategoryClick = (subcategoryId: string) => {
+    router.push(`/wellness/categories/nutrition/${subcategoryId}`);
+  };
   
   return (
     <div className="py-6 font-sans">
@@ -19,10 +31,41 @@ export default function NutritionPage() {
         
         <h1 className="text-2xl font-bold mb-6">Nutrition</h1>
         
-        <div className="text-center py-8">
-          <p className="text-gray-500">Nutrition content coming soon!</p>
-          <p className="text-sm text-gray-400 mt-2">Check back for healthy recipes, meal plans, and nutrition tips.</p>
+        {/* Subcategories Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          {NUTRITION_SUBCATEGORIES.map((subcategory) => (
+            <div 
+              key={subcategory.id} 
+              className="flex flex-col cursor-pointer"
+              onClick={() => handleSubcategoryClick(subcategory.id)}
+            >
+              <div className="relative rounded-xl overflow-hidden aspect-square">
+                <Image 
+                  src={subcategory.imageUrl || "/images/wellness/placeholder.jpg"} 
+                  alt={subcategory.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="mt-2">
+                <h3 className="font-bold">{subcategory.name}</h3>
+                {subcategory.count && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {subcategory.count} {subcategory.countLabel || "items"}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
+        
+        {/* Featured Content */}
+        <h2 className="text-xl font-bold mb-4">Featured</h2>
+        <ContentGrid 
+          items={NUTRITION_CONTENT.slice(0, 4)}
+          columns={2}
+          onItemClick={handleItemClick}
+        />
       </div>
     </div>
   );

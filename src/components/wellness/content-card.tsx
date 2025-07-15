@@ -21,7 +21,7 @@ export function ContentCard({ item, onClick, variant = "medium" }: ContentCardPr
     <div className="flex flex-col cursor-pointer" onClick={onClick}>
       {/* Image container */}
       <div className={`relative rounded-xl overflow-hidden ${sizeClasses[variant]}`}>
-        <Image src={item.imageUrl} alt={item.title || ""} fill className="object-cover" />
+        <Image src={item.imageUrl || ""} alt={item.title || ""} fill className="object-cover" />
       </div>
 
       {/* Content below image */}

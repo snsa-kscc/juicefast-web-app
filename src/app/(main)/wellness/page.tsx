@@ -4,7 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Settings } from "lucide-react";
 import Image from "next/image";
-import { WELLNESS_CATEGORIES, TRENDING_CONTENT, DAILY_CONTENT, MIND_CONTENT } from "@/data/wellness-content";
+import {
+  WELLNESS_CATEGORIES,
+  TRENDING_CONTENT,
+  DAILY_CONTENT,
+  MIND_CONTENT,
+  WORKOUT_CONTENT,
+  NUTRITION_CONTENT,
+  BEAUTY_CONTENT,
+  MIND_SUBCATEGORIES,
+  WORKOUT_SUBCATEGORIES,
+  NUTRITION_SUBCATEGORIES,
+  BEAUTY_SUBCATEGORIES,
+  SubcategoryItem
+} from "@/data/wellness-content";
 import { CategorySelector } from "@/components/wellness/category-selector";
 import { ContentGrid } from "@/components/wellness/content-grid";
 import { DailyContent } from "@/components/wellness/daily-content";
@@ -62,6 +75,28 @@ export default function WellnessPage() {
         return TRENDING_CONTENT;
       case "mind":
         return MIND_CONTENT;
+      case "workouts":
+        return WORKOUT_CONTENT;
+      case "nutrition":
+        return NUTRITION_CONTENT;
+      case "beauty":
+        return BEAUTY_CONTENT;
+      default:
+        return [];
+    }
+  };
+  
+  // Get subcategories for the selected category
+  const getSubcategoriesForCategory = () => {
+    switch (selectedCategory) {
+      case "mind":
+        return MIND_SUBCATEGORIES;
+      case "workouts":
+        return WORKOUT_SUBCATEGORIES;
+      case "nutrition":
+        return NUTRITION_SUBCATEGORIES;
+      case "beauty":
+        return BEAUTY_SUBCATEGORIES;
       default:
         return [];
     }
@@ -112,7 +147,36 @@ export default function WellnessPage() {
         </h2>
 
         {/* Content Grid */}
-        <ContentGrid items={getContentForCategory()} columns={2} onItemClick={handleItemClick} />
+        {selectedCategory === "trending" ? (
+          <ContentGrid items={getContentForCategory()} columns={2} onItemClick={handleItemClick} />
+        ) : (
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            {getSubcategoriesForCategory().map((subcategory: SubcategoryItem) => (
+              <div 
+                key={subcategory.id} 
+                className="flex flex-col cursor-pointer"
+                onClick={() => router.push(`/wellness/categories/${selectedCategory}/${subcategory.id}`)}
+              >
+                <div className="relative rounded-xl overflow-hidden aspect-square">
+                  <Image 
+                    src={subcategory.imageUrl || "/images/wellness/placeholder.jpg"} 
+                    alt={subcategory.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="mt-2">
+                  <h3 className="font-bold">{subcategory.name}</h3>
+                  {subcategory.count && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {subcategory.count} {subcategory.countLabel || "items"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Premium Banner - Only show on trending */}
         {selectedCategory === "trending" && (
@@ -126,6 +190,7 @@ export default function WellnessPage() {
 
         {/* Daily Content - Only show on trending */}
         {selectedCategory === "trending" && <DailyContent items={DAILY_CONTENT} onItemClick={handleItemClick} />}
+        <div className="h-16"></div>
       </div>
     </div>
   );

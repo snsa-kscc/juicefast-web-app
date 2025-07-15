@@ -35,7 +35,7 @@ export default function WellnessItemPage() {
     <div className="pb-6 font-sans">
       {/* Header with background image */}
       <div className="relative h-64 w-full">
-        <Image src={item.imageUrl} alt={item.title || ""} fill className="object-cover" />
+        <Image src={item.imageUrl || ""} alt={item.title || ""} fill className="object-cover" />
 
         {/* Back button */}
         <button onClick={() => router.back()} className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm rounded-full p-2">
