@@ -17,7 +17,7 @@ export default async function StoresPage() {
   const useIframe = true; // Set to false to use server-side proxy instead
 
   return (
-    <div className="py-6">
+    <div>
       <Suspense fallback={<div className="text-center py-10">Loading external content...</div>}>
         <ExternalSiteWrapper url={externalSiteUrl} useIframe={useIframe} />
       </Suspense>
