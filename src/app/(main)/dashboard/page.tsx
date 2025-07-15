@@ -36,6 +36,7 @@ export default async function Dashboard() {
   });
 
   const userId = session?.user?.id ?? "";
+  const userName = session?.user?.name ?? "";
   // Fetch weekly metrics and average score from the database
   const weeklyMetrics = await getWeeklyMetrics(userId);
   const averageScore = await getWeeklyAverageScore(userId);
@@ -43,5 +44,5 @@ export default async function Dashboard() {
   // Process the data for the dashboard
   const processedData = processWeeklyMetricsForDashboard(weeklyMetrics);
 
-  return <DashboardClient userId={userId} initialWeeklyData={processedData} initialAverageScore={averageScore} />;
+  return <DashboardClient userId={userId} userName={userName} initialWeeklyData={processedData} initialAverageScore={averageScore} />;
 }
