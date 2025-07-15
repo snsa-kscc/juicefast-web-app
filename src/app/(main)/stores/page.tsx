@@ -1,20 +1,26 @@
 import { StoreFinder } from "@/components/about-us/store-finder";
 import { fetchStoreLocations, FALLBACK_STORE_LOCATIONS } from "@/data/store-locations";
+import { Suspense } from "react";
+import { ExternalSiteWrapper } from "@/components/external-site/external-site-wrapper";
 
 export default async function StoresPage() {
   // Fetch store locations from the API
   const storeLocations = await fetchStoreLocations();
-  
+
   // Use fallback data if API call fails and returns empty array
   const stores = storeLocations.length > 0 ? storeLocations : FALLBACK_STORE_LOCATIONS;
-  
+
+  // External site URL to embed
+  const externalSiteUrl = "https://juicefastc12.sg-host.com/";
+
+  // Choose which implementation to use
+  const useIframe = true; // Set to false to use server-side proxy instead
+
   return (
     <div className="py-6">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Store Finder</h1>
-        <p className="text-gray-500 mt-2">Find healthy food stores near you</p>
-      </div>
-      <StoreFinder initialStores={stores} />
+      <Suspense fallback={<div className="text-center py-10">Loading external content...</div>}>
+        <ExternalSiteWrapper url={externalSiteUrl} useIframe={useIframe} />
+      </Suspense>
     </div>
   );
 }
