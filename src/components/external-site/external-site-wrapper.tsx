@@ -74,6 +74,7 @@ export function ExternalSiteWrapper({ url, useIframe = true, height = "800px" }:
           sandbox="allow-scripts allow-same-origin allow-forms"
           referrerPolicy="no-referrer"
           title="External Content"
+          allow="autoplay; fullscreen"
         />
       </div>
     );

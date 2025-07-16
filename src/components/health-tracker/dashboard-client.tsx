@@ -273,7 +273,7 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
           <h1 className="text-xl font-medium">Hi, {userName ? userName.split(" ")[0] : "there"}!</h1>
           <p className="text-gray-500 text-sm">What are we doing today?</p>
         </div>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => router.push("/profile")}>
           <Settings className="h-5 w-5 text-gray-500" />
         </Button>
       </div>
@@ -298,9 +298,9 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
       {/* Wellness Score Card */}
       <div className="px-6 py-4">
         <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-sm font-semibold tracking-wider uppercase">Wellness Score</h2>
-            <Info className="h-4 w-4 text-gray-400" />
+          <div className="flex items-center mb-2">
+            <h2 className="text-xl font-semibold tracking-wider uppercase flex-grow text-center">Wellness Score</h2>
+            <Info className="h-4 w-4 text-gray-400 ml-2" />
           </div>
 
           {/* Circular Progress */}
@@ -332,64 +332,64 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
             </div>
             <p className="text-sm text-gray-500">One step and one goal at a time.</p>
           </div>
-        </div>
 
-        {/* Daily Progress Summary */}
-        <div className="px-6 py-4 mb-6">
-          <h3 className="text-sm text-center font-semibold mb-4">DAILY PROGRESS SUMMARY (%)</h3>
-          <div className="flex justify-between">
-            {/* Steps Progress */}
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-20 rounded-3xl bg-[#FFF8E7] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
-                {/* Progress fill */}
-                <div className="absolute bottom-0 left-0 right-0 bg-[#FFC856] transition-all duration-500" style={{ height: `${Math.min(100, 70)}%` }}></div>
-                <div className="flex flex-col items-center justify-center z-10 space-y-1">
-                  <div>
-                    <StepsIcon />
+          {/* Daily Progress Summary */}
+          <div className="px-3 pt-4 mb-2">
+            <h3 className=" text-center font-semibold mb-4">DAILY PROGRESS SUMMARY (%)</h3>
+            <div className="flex justify-between pt-4">
+              {/* Steps Progress */}
+              <div className="flex flex-col items-center">
+                <div className="w-14 h-20 rounded-3xl bg-[#FFF8E7] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
+                  {/* Progress fill */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-[#FFC856] transition-all duration-500" style={{ height: `${Math.min(100, 70)}%` }}></div>
+                  <div className="flex flex-col items-center justify-center z-10 space-y-1">
+                    <div>
+                      <StepsIcon />
+                    </div>
+                    <span className="font-semibold">70</span>
                   </div>
-                  <span className="font-semibold">70</span>
                 </div>
               </div>
-            </div>
 
-            {/* Mindfulness Progress */}
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-20 rounded-3xl bg-[#FFF0F0] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
-                {/* Progress fill */}
-                <div className="absolute bottom-0 left-0 right-0 bg-[#FF8080] transition-all duration-500" style={{ height: `${Math.min(100, 64)}%` }}></div>
-                <div className="flex flex-col items-center justify-center z-10 space-y-1">
-                  <div>
-                    <MindfulnessIcon />
+              {/* Mindfulness Progress */}
+              <div className="flex flex-col items-center">
+                <div className="w-14 h-20 rounded-3xl bg-[#FFF0F0] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
+                  {/* Progress fill */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-[#FF8080] transition-all duration-500" style={{ height: `${Math.min(100, 64)}%` }}></div>
+                  <div className="flex flex-col items-center justify-center z-10 space-y-1">
+                    <div>
+                      <MindfulnessIcon />
+                    </div>
+                    <span className="font-semibold">64</span>
                   </div>
-                  <span className="font-semibold">64</span>
                 </div>
               </div>
-            </div>
 
-            {/* Meals Progress */}
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-20 rounded-3xl bg-[#F0FFF4] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
-                {/* Progress fill - capped at 100% but showing 114% */}
-                <div className="absolute bottom-0 left-0 right-0 bg-[#11B364] transition-all duration-500" style={{ height: `100%` }}></div>
-                <div className="flex flex-col items-center justify-center z-10 space-y-1">
-                  <div>
-                    <MealIcon />
+              {/* Meals Progress */}
+              <div className="flex flex-col items-center">
+                <div className="w-14 h-20 rounded-3xl bg-[#F0FFF4] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
+                  {/* Progress fill - capped at 100% but showing 114% */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-[#11B364] transition-all duration-500" style={{ height: `100%` }}></div>
+                  <div className="flex flex-col items-center justify-center z-10 space-y-1">
+                    <div>
+                      <MealIcon />
+                    </div>
+                    <span className="font-semibold text-white">114</span>
                   </div>
-                  <span className="font-semibold text-white">114</span>
                 </div>
               </div>
-            </div>
 
-            {/* Water Progress */}
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-20 rounded-3xl bg-[#EBF9FF] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
-                {/* Progress fill - 0% */}
-                <div className="absolute bottom-0 left-0 right-0 bg-[#4CC3FF] transition-all duration-500" style={{ height: `${Math.min(100, 0)}%` }}></div>
-                <div className="flex flex-col items-center justify-center z-10 space-y-1">
-                  <div>
-                    <WaterIcon />
+              {/* Water Progress */}
+              <div className="flex flex-col items-center">
+                <div className="w-14 h-20 rounded-3xl bg-[#EBF9FF] flex flex-col items-center justify-center mb-1 relative overflow-hidden">
+                  {/* Progress fill - 0% */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-[#4CC3FF] transition-all duration-500" style={{ height: `${Math.min(100, 0)}%` }}></div>
+                  <div className="flex flex-col items-center justify-center z-10 space-y-1">
+                    <div>
+                      <WaterIcon />
+                    </div>
+                    <span className="font-semibold">0</span>
                   </div>
-                  <span className="font-semibold">0</span>
                 </div>
               </div>
             </div>
@@ -397,11 +397,7 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
         </div>
 
         {/* Wellness Cards - Horizontal Scrollable */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-semibold">Wellness</h3>
-          </div>
-
+        <div className="mb-6 pt-4">
           <div className="flex space-x-3 overflow-x-auto pb-2">
             {/* Wellness Cards from Mind subcategory */}
             <Link href="/wellness/categories/mind/guided-meditations" className="flex-shrink-0">
@@ -450,7 +446,7 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
 
         {/* Daily Overview */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold mb-4">DAILY OVERVIEW</h3>
+          <h3 className="font-semibold text-center mb-4">DAILY OVERVIEW</h3>
 
           {/* Daily Tasks List */}
           <div className="space-y-4">
