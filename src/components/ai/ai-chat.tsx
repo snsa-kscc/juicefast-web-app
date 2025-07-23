@@ -50,7 +50,6 @@ export function AIChat({ userId }: AIChatProps) {
   return (
     <Card className="w-full h-full flex flex-col">
       <CardHeader className="pb-2 flex-shrink-0">
-        <CardTitle>AI Health Assistant</CardTitle>
         <CardDescription>Get personalized health insights and recommendations based on your tracked data</CardDescription>
       </CardHeader>
 

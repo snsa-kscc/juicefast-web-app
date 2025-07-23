@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       const dataUrl = `data:${imageFile.type};base64,${base64Image}`;
 
       const { object } = await generateObject({
-        model: google("gemini-2.0-flash-001"),
+        model: google("gemini-2.5-flash"),
         schema: z.object({
           meal: MacroSchema,
         }),

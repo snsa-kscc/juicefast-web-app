@@ -91,6 +91,9 @@ export default function LandingPage() {
             <Link href="/sign-up" className="block w-full text-center py-3 px-4 border border-gray-300 rounded-full font-medium">
               Sign up with email
             </Link>
+            <Link href="/sign-in" className="block w-full text-center py-3 px-4 border border-gray-300 rounded-full font-medium">
+              Sign in with email
+            </Link>
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">

@@ -32,14 +32,14 @@ export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerCli
     }
   }, [initialMealsData]);
 
-  const handleMealAdded = async (mealData: MacroData) => {
+  const handleMealAdded = async (mealData: MacroData, mealType?: MealType) => {
     if (!userId) return;
 
     try {
       setIsLoading(true);
 
       const newMeal: MealEntry = {
-        mealType: MEALS_TRACKER_CONFIG.mealTypes[0].id as MealType, // Default to first meal type
+        mealType: mealType || activeTab, // Use provided meal type or current active tab
         timestamp: new Date(),
         ...mealData,
       };
@@ -58,9 +58,30 @@ export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerCli
   };
 
   const handleAddMealByType = (mealType: MealType) => {
+    setActiveTab(mealType);
     setActiveEntryTab("manual");
-    // The actual meal will be added through the ManualEntryForm
   };
+
+  // Calculate daily nutrition totals
+  const calculateDailyTotals = () => {
+    return meals.reduce(
+      (totals, meal) => ({
+        calories: totals.calories + meal.calories,
+        protein: totals.protein + meal.protein,
+        carbs: totals.carbs + meal.carbs,
+        fat: totals.fat + meal.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  };
+
+  // Filter meals by type
+  const getMealsByType = (mealType: MealType) => {
+    return meals.filter(meal => meal.mealType === mealType);
+  };
+
+  const dailyTotals = calculateDailyTotals();
+  const currentMeals = getMealsByType(activeTab);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FCFBF8]">
@@ -143,9 +164,13 @@ export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerCli
           </div>
         )}
 
-        {/* Active tab content - hidden for now to match the design */}
-        <div className="hidden">
-          {activeEntryTab === "scan" ? <ImageScanner onScanComplete={handleMealAdded} /> : <ManualEntryForm onMealAdded={handleMealAdded} />}
+        {/* Active tab content */}
+        <div className="mt-4">
+          {activeEntryTab === "scan" ? (
+            <ImageScanner onScanComplete={(data) => handleMealAdded(data, activeTab)} />
+          ) : (
+            <ManualEntryForm onMealAdded={(data) => handleMealAdded(data, activeTab)} />
+          )}
         </div>
       </div>
 
@@ -184,10 +209,48 @@ export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerCli
           </Button>
         </div>
 
-        <div className="flex items-center justify-center py-8 text-gray-500">No meals logged yet</div>
+        {currentMeals.length === 0 ? (
+          <div className="flex items-center justify-center py-8 text-gray-500">No meals logged yet</div>
+        ) : (
+          <div className="space-y-3 mb-4">
+            {currentMeals.map((meal, index) => (
+              <div key={index} className="bg-white rounded-lg p-4 shadow-sm border">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-medium text-gray-900">{meal.name}</h3>
+                  <div className="text-sm font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                    {meal.calories} kcal
+                  </div>
+                </div>
+                
+                {meal.description && (
+                  <p className="text-sm text-gray-600 mb-3">{meal.description}</p>
+                )}
+                
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="bg-blue-50 p-2 rounded text-center">
+                    <span className="block font-medium text-blue-700">{meal.protein}g</span>
+                    <span className="text-xs text-gray-600">Protein</span>
+                  </div>
+                  <div className="bg-amber-50 p-2 rounded text-center">
+                    <span className="block font-medium text-amber-700">{meal.carbs}g</span>
+                    <span className="text-xs text-gray-600">Carbs</span>
+                  </div>
+                  <div className="bg-orange-50 p-2 rounded text-center">
+                    <span className="block font-medium text-orange-700">{meal.fat}g</span>
+                    <span className="text-xs text-gray-600">Fat</span>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-gray-500 mt-2 text-right">
+                  {new Date(meal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-md py-6" onClick={() => handleAddMealByType(activeTab)}>
-          Add your first meal
+          {currentMeals.length === 0 ? 'Add your first meal' : `Add another ${activeTab}`}
         </Button>
       </div>
 
@@ -197,19 +260,19 @@ export function MealsTrackerClient({ userId, initialMealsData }: MealsTrackerCli
 
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <div className="text-2xl font-bold text-emerald-500">0</div>
+            <div className="text-2xl font-bold text-emerald-500">{dailyTotals.calories}</div>
             <div className="text-xs text-gray-500">Calories</div>
           </div>
           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <div className="text-2xl font-bold text-emerald-500">0g</div>
+            <div className="text-2xl font-bold text-emerald-500">{dailyTotals.protein}g</div>
             <div className="text-xs text-gray-500">Protein</div>
           </div>
           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <div className="text-2xl font-bold text-emerald-500">0g</div>
+            <div className="text-2xl font-bold text-emerald-500">{dailyTotals.carbs}g</div>
             <div className="text-xs text-gray-500">Carbs</div>
           </div>
           <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-            <div className="text-2xl font-bold text-emerald-500">0g</div>
+            <div className="text-2xl font-bold text-emerald-500">{dailyTotals.fat}g</div>
             <div className="text-xs text-gray-500">Fat</div>
           </div>
         </div>

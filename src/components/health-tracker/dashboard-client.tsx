@@ -529,27 +529,31 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
 
         {/* Challenge Banner */}
         <div className="w-full relative">
-          <h3 className="absolute top-4 left-4 text-black text-sm font-medium">JF Challenge Started</h3>
-          <Image className="w-full" src="/images/wellness/challenge.jpg" alt="Challenge" width={390} height={240} />
+          {/* <h3 className="absolute top-4 left-4 text-black text-sm font-medium">JF Challenge Started</h3> */}
+          <Link href="/stores">
+            <Image className="w-full" src="/images/wellness/banner-1.png" alt="Challenge" width={390} height={240} />
+          </Link>
         </div>
 
         <div className="w-full relative mt-6">
           {/* <h3 className="absolute top-4 right-4 text-black text-sm font-medium">Fasting programs 10% off</h3> */}
-          <Image className="w-full" src="/images/wellness/10-off.jpg" alt="Challenge" width={390} height={240} />
+          <Link href="/stores">
+            <Image className="w-full" src="/images/wellness/banner-2.png" alt="Programs" width={390} height={240} />
+          </Link>
         </div>
 
         {/* Fasting Programs Banner */}
-        <div className="bg-white rounded-lg p-4 mb-4 flex justify-between items-center">
+        {/* <div className="bg-white rounded-lg p-4 mb-4 flex justify-between items-center">
           <div>
             <h4 className="font-medium text-sm">Fasting programs</h4>
-            <p className="text-xs font-bold text-[#11B364]">10% off</p>
+            <p className="text-xs font-bold text-[#11B364]">10fgg% off</p>
           </div>
           <Button variant="outline" size="sm" className="text-xs h-8">
             Redeem
           </Button>
-        </div>
+        </div> */}
       </div>
-      <div className="h-20"></div>
+      <div className="h-40"></div>
     </div>
   );
 }
