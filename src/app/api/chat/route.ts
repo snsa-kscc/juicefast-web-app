@@ -14,7 +14,14 @@ export async function POST(request: NextRequest) {
 
     // Get the user's health data for context
     const todayKey = getTodayKey();
-    const dailyMetrics = await getDailyMetrics(userId, new Date(todayKey)) || { meals: [], waterIntake: [], steps: [], sleep: null, mindfulness: [], totalScore: 0 };
+    const dailyMetrics = (await getDailyMetrics(userId, new Date(todayKey))) || {
+      meals: [],
+      waterIntake: [],
+      steps: [],
+      sleep: null,
+      mindfulness: [],
+      totalScore: 0,
+    };
 
     // Create a context message with the user's health data
     const healthContext = `
@@ -56,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     // Generate response using Vercel AI SDK
     const result = streamText({
-      model: google("gemini-1.5-flash-001"),
+      model: google("gemini-2.5-flash"),
       messages: [systemMessage, ...messages],
       temperature: 0.7,
       maxTokens: 500,
