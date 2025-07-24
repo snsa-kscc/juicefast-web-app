@@ -88,7 +88,7 @@ export function ProfileClient({ userId, user, initialProfile }: ProfileClientPro
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      router.push("/login");
+      router.push("/");
     } catch (error) {
       console.error("Failed to log out:", error);
     }
@@ -107,15 +107,7 @@ export function ProfileClient({ userId, user, initialProfile }: ProfileClientPro
               <div className="flex flex-col items-center space-y-4">
                 <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden relative">
                   {user?.image ? (
-                    <Image 
-                      src={user.image} 
-                      alt="Profile" 
-                      fill 
-                      sizes="96px"
-                      className="object-cover" 
-                      priority
-                      unoptimized={false}
-                    />
+                    <Image src={user.image} alt="Profile" fill sizes="96px" className="object-cover" priority unoptimized={false} />
                   ) : (
                     <UserIcon className="h-12 w-12 text-primary" />
                   )}
