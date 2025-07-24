@@ -202,27 +202,27 @@ export function StepsTrackerClient({ userId, initialStepsData }: StepsTrackerCli
         </p>
 
         {/* Circular Progress */}
-        <div className="relative w-52 h-52 mb-8">
+        <div className="relative w-[250px] h-[250px] mb-8">
           {/* Background circle */}
-          <svg className="w-full h-full" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="45" fill="white" stroke="#FFF0D0" strokeWidth="5" className="drop-shadow-md" />
+          <svg className="w-full h-full" viewBox="0 0 250 250">
+            <circle cx="125" cy="125" r="110" fill="white" stroke="#FFF0D0" strokeWidth="10" className="drop-shadow-md" />
 
             {/* Progress circle */}
             <circle
-              cx="60"
-              cy="60"
-              r="45"
+              cx="125"
+              cy="125"
+              r="110"
               fill="none"
               stroke="#FFC856"
-              strokeWidth="5"
-              strokeDasharray="283"
-              strokeDashoffset={283 - (283 * progressPercentage) / 100}
-              transform="rotate(-90 60 60)"
+              strokeWidth="10"
+              strokeDasharray="628"
+              strokeDashoffset={628 - (628 * progressPercentage) / 100}
+              transform="rotate(-90 125 125)"
               className="transition-all duration-1000"
             />
 
-            {/* Step count text */}
-            <text x="60" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="36" fontWeight="bold" fill="#FFC856">
+            {/* Step count text - improved centering for iOS */}
+            <text x="125" y="125" textAnchor="middle" dominantBaseline="central" fontSize="56" fontWeight="bold" fill="#FFC856" dy="0.1em">
               {Math.round(displayedSteps / 100)}
             </text>
           </svg>

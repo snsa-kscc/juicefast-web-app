@@ -209,27 +209,27 @@ export function MindfulnessTrackerClient({ userId, initialMindfulnessData }: Min
         </p>
 
         {/* Circular Progress */}
-        <div className="relative w-52 h-52 mb-8">
+        <div className="relative w-[250px] h-[250px] mb-8">
           {/* Background circle */}
-          <svg className="w-full h-full" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="45" fill="white" stroke="#FFEFEB" strokeWidth="5" className="drop-shadow-md" />
+          <svg className="w-full h-full" viewBox="0 0 250 250">
+            <circle cx="125" cy="125" r="110" fill="white" stroke="#FFEFEB" strokeWidth="10" className="drop-shadow-md" />
 
             {/* Progress circle */}
             <circle
-              cx="60"
-              cy="60"
-              r="45"
+              cx="125"
+              cy="125"
+              r="110"
               fill="none"
               stroke="#FE8E77"
-              strokeWidth="5"
-              strokeDasharray="283"
-              strokeDashoffset={283 - (283 * progressPercentage) / 100}
-              transform="rotate(-90 60 60)"
+              strokeWidth="10"
+              strokeDasharray="628"
+              strokeDashoffset={628 - (628 * progressPercentage) / 100}
+              transform="rotate(-90 125 125)"
               className="transition-all duration-1000"
             />
 
-            {/* Percentage text */}
-            <text x="60" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="28" fontWeight="bold" fill="#000">
+            {/* Percentage text - improved centering for iOS */}
+            <text x="125" y="125" textAnchor="middle" dominantBaseline="central" fontSize="52" fontWeight="bold" fill="#000" dy="0.1em">
               {progressPercentage}
             </text>
           </svg>

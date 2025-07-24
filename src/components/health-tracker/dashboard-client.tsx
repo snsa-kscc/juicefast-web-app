@@ -305,27 +305,27 @@ export function DashboardClient({ userId, userName, initialWeeklyData, initialAv
 
           {/* Circular Progress */}
           <div className="flex flex-col items-center justify-center py-4">
-            <div className="relative w-36 h-36 mb-2">
+            <div className="relative w-[250px] h-[250px] mb-2">
               {/* Background circle */}
-              <svg className="w-full h-full" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="45" fill="white" stroke="#F2E9D8" strokeWidth="5" className="drop-shadow-md" />
+              <svg className="w-full h-full" viewBox="0 0 250 250">
+                <circle cx="125" cy="125" r="110" fill="white" stroke="#F2E9D8" strokeWidth="10" className="drop-shadow-md" />
 
                 {/* Progress circle */}
                 <circle
-                  cx="60"
-                  cy="60"
-                  r="45"
+                  cx="125"
+                  cy="125"
+                  r="110"
                   fill="none"
                   stroke="#E8D5B0"
-                  strokeWidth="5"
-                  strokeDasharray="283"
-                  strokeDashoffset={283 - (283 * Math.min(100, averageScore)) / 100}
-                  transform="rotate(-90 60 60)"
+                  strokeWidth="10"
+                  strokeDasharray="628"
+                  strokeDashoffset={628 - (628 * Math.min(100, averageScore)) / 100}
+                  transform="rotate(-90 125 125)"
                   className="transition-all duration-1000"
                 />
 
-                {/* Score text */}
-                <text x="60" y="65" textAnchor="middle" dominantBaseline="middle" fontSize="28" fontWeight="bold" fill="#000">
+                {/* Score text - improved centering for iOS */}
+                <text x="125" y="125" textAnchor="middle" dominantBaseline="central" fontSize="52" fontWeight="bold" fill="#000" dy="0.1em">
                   {Math.round(averageScore)}
                 </text>
               </svg>
