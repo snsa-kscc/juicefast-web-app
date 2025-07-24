@@ -17,11 +17,23 @@ export function MobileNavigation() {
           {NAVIGATION_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             const IconComponent = item.icon;
+            const fillValue = isActive ? "url(#icon-gradient)" : "none";
+            const strokeValue = isActive ? "url(#stroke-gradient)" : "#000";
 
             return (
               <Link key={item.name} href={item.href} className="flex flex-col items-center justify-center px-2">
-                <IconComponent />
-                <span className={`text-[10px] mt-1 ${isActive ? "text-primary font-medium" : "text-gray-600"}`}>{item.name}</span>
+                <div
+                  className="text-black"
+                  style={
+                    {
+                      "--icon-fill": fillValue,
+                      "--icon-stroke": strokeValue,
+                    } as React.CSSProperties & { "--icon-fill": string; "--icon-stroke": string }
+                  }
+                >
+                  <IconComponent />
+                </div>
+                <span className={`text-[10px] mt-1 font-medium text-black`}>{item.name}</span>
               </Link>
             );
           })}
