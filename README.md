@@ -313,3 +313,5 @@ This application is configured for deployment on Vercel with:
 ## License
 
 This project is private and proprietary.
+
+Something on readme
