@@ -315,7 +315,7 @@ export function ProfileClient({ userId, user, initialProfile }: ProfileClientPro
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <HeartIcon className="h-5 w-5 mr-2 text-red-500" />
-                          <h4 className="font-medium">Daily Calories</h4>
+                          <h4 className="font-medium">Recommended Daily Calories</h4>
                         </div>
                         <span className="text-lg font-bold">
                           {profile?.weight && profile?.height && profile?.age && profile?.gender && profile?.activityLevel
@@ -331,7 +331,7 @@ export function ProfileClient({ userId, user, initialProfile }: ProfileClientPro
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <HeartIcon className="h-5 w-5 mr-2 text-red-500" />
-                          <h4 className="font-medium">Water Goal</h4>
+                          <h4 className="font-medium">Recommended Water Goal</h4>
                         </div>
                         <span className="text-lg font-bold">{profile?.weight ? `${Math.round(profile.weight * 30)} ml` : "-"}</span>
                       </div>
